@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 
 class MessageHandler:
 
-    def __init__(self, memory: Memory, style_engine: StyleEngine):
+    def __init__(self, memory: Memory, style_engine: StyleEngine, interactive_session=None):
         self.memory = memory
         self.style_engine = style_engine
+        self.interactive_session = interactive_session
         self.my_user_id: Optional[int] = None
         self.my_username: Optional[str] = None
 
@@ -88,6 +89,9 @@ class MessageHandler:
 
             logger.info(f"Message from {username} in chat {chat_id}: {message_text[:50]}...")
 
+            if self.interactive_session:
+                self.interactive_session.increment_messages()
+
             await self.memory.add_message(
                 chat_id=chat_id,
                 user_id=user_id,
@@ -117,6 +121,9 @@ class MessageHandler:
             if response_text:
                 await event.respond(response_text)
                 logger.info(f"Sent response: {response_text[:50]}...")
+
+                if self.interactive_session:
+                    self.interactive_session.increment_responses()
 
                 await self.memory.add_message(
                     chat_id=chat_id,

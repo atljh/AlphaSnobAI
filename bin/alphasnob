@@ -39,7 +39,8 @@ def get_daemon_manager() -> DaemonManager:
 
 @app.command()
 def start(
-    foreground: bool = typer.Option(False, "--foreground", "-f", help="Run in foreground (don't daemonize)")
+    foreground: bool = typer.Option(False, "--foreground", "-f", help="Run in foreground (don't daemonize)"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Run in interactive mode with live UI")
 ):
     print_banner()
 
@@ -48,13 +49,16 @@ def start(
     if daemon.is_running():
         pid = daemon.get_pid()
         show_error(f"Bot is already running with PID {pid}")
-        show_info("Use 'python cli.py stop' to stop it first")
+        show_info("Use 'python bin/alphasnob stop' to stop it first")
         raise typer.Exit(1)
 
     show_info("Starting AlphaSnob bot...")
 
     try:
-        if foreground:
+        if interactive:
+            show_info("Starting in interactive mode...")
+            subprocess.run([sys.executable, "bot/runner.py"], check=True)
+        elif foreground:
             show_info("Running in foreground mode (Ctrl+C to stop)")
             subprocess.run([sys.executable, "main.py"], check=True)
         else:
@@ -244,15 +248,19 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         print_banner()
         console.print("\n[bold cyan]Available commands:[/bold cyan]")
-        console.print("  [green]start[/green]    - Start the bot daemon")
-        console.print("  [green]stop[/green]     - Stop the bot daemon")
-        console.print("  [green]restart[/green]  - Restart the bot daemon")
-        console.print("  [green]status[/green]   - Show bot status")
-        console.print("  [green]logs[/green]     - Show bot logs")
-        console.print("  [green]config[/green]   - Manage configuration")
-        console.print("  [green]stats[/green]    - Show statistics")
-        console.print("  [green]version[/green]  - Show version info")
-        console.print("\n[dim]Use 'python cli.py COMMAND --help' for more info[/dim]\n")
+        console.print("  [green]start[/green]          - Start the bot")
+        console.print("    [dim]--interactive  - Interactive mode with live UI[/dim]")
+        console.print("    [dim]--foreground   - Foreground mode (no daemon)[/dim]")
+        console.print("  [green]stop[/green]           - Stop the bot daemon")
+        console.print("  [green]restart[/green]        - Restart the bot daemon")
+        console.print("  [green]status[/green]         - Show bot status")
+        console.print("  [green]logs[/green]           - Show bot logs")
+        console.print("  [green]config[/green]         - Manage configuration")
+        console.print("  [green]version[/green]        - Show version info")
+        console.print("\n[dim]Examples:[/dim]")
+        console.print("  [cyan]python bin/alphasnob start --interactive[/cyan]")
+        console.print("  [cyan]python bin/alphasnob start --foreground[/cyan]")
+        console.print("  [cyan]python bin/alphasnob start[/cyan]  [dim](daemon mode)[/dim]\n")
 
 
 if __name__ == "__main__":

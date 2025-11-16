@@ -1,5 +1,3 @@
-"""Configuration management for AlphaSnobAI using YAML."""
-
 import yaml
 from pathlib import Path
 from typing import List, Optional, Dict, Any
@@ -8,7 +6,6 @@ from dataclasses import dataclass, field
 
 @dataclass
 class TelegramConfig:
-    """Telegram configuration."""
     session_name: str
     api_id: int
     api_hash: str
@@ -16,7 +13,6 @@ class TelegramConfig:
 
 @dataclass
 class LLMConfig:
-    """LLM configuration."""
     provider: str
     model: str
     temperature: float
@@ -27,7 +23,6 @@ class LLMConfig:
 
 @dataclass
 class BotConfig:
-    """Bot behavior configuration."""
     response_mode: str
     response_probability: float
     allowed_users: List[int] = field(default_factory=list)
@@ -36,7 +31,6 @@ class BotConfig:
 
 @dataclass
 class PathsConfig:
-    """Paths configuration."""
     corpus: Path
     database: Path
     logs: Path
@@ -44,14 +38,12 @@ class PathsConfig:
 
 @dataclass
 class DaemonConfig:
-    """Daemon configuration."""
     pid_file: Path
     log_level: str
     auto_restart: bool = False
 
 
 class Settings:
-    """Application settings loaded from YAML files."""
 
     def __init__(self, config_path: Optional[Path] = None, secrets_path: Optional[Path] = None):
         """Initialize settings from YAML files.
@@ -60,7 +52,6 @@ class Settings:
             config_path: Path to config.yaml (defaults to config/config.yaml)
             secrets_path: Path to secrets.yaml (defaults to config/secrets.yaml)
         """
-        # Default paths
         self.base_dir = Path(__file__).parent.parent
         self.config_dir = self.base_dir / "config"
 
@@ -72,12 +63,9 @@ class Settings:
         self.config_path = Path(config_path)
         self.secrets_path = Path(secrets_path)
 
-        # Load configuration
         self._load_config()
 
     def _load_config(self):
-        """Load and validate configuration from YAML files."""
-        # Load main config
         if not self.config_path.exists():
             raise FileNotFoundError(
                 f"Configuration file not found: {self.config_path}\n"
@@ -87,7 +75,6 @@ class Settings:
         with open(self.config_path, 'r', encoding='utf-8') as f:
             config_data = yaml.safe_load(f) or {}
 
-        # Load secrets
         if not self.secrets_path.exists():
             raise FileNotFoundError(
                 f"Secrets file not found: {self.secrets_path}\n"
@@ -97,19 +84,16 @@ class Settings:
         with open(self.secrets_path, 'r', encoding='utf-8') as f:
             secrets_data = yaml.safe_load(f) or {}
 
-        # Parse and validate configuration
         self._parse_telegram_config(config_data, secrets_data)
         self._parse_llm_config(config_data, secrets_data)
         self._parse_bot_config(config_data)
         self._parse_paths_config(config_data)
         self._parse_daemon_config(config_data)
 
-        # Ensure directories exist
         self.paths.database.parent.mkdir(exist_ok=True, parents=True)
         self.paths.logs.parent.mkdir(exist_ok=True, parents=True)
 
     def _parse_telegram_config(self, config: Dict[str, Any], secrets: Dict[str, Any]):
-        """Parse Telegram configuration."""
         tg_config = config.get('telegram', {})
         tg_secrets = secrets.get('telegram', {})
 
@@ -125,7 +109,6 @@ class Settings:
         )
 
     def _parse_llm_config(self, config: Dict[str, Any], secrets: Dict[str, Any]):
-        """Parse LLM configuration."""
         llm_config = config.get('llm', {})
         llm_secrets = secrets.get('llm', {})
 
@@ -133,7 +116,6 @@ class Settings:
         if provider not in ['claude', 'openai']:
             raise ValueError(f"Invalid llm.provider: {provider}. Must be 'claude' or 'openai'")
 
-        # Validate API keys
         anthropic_key = llm_secrets.get('anthropic_api_key')
         openai_key = llm_secrets.get('openai_api_key')
 
@@ -142,7 +124,6 @@ class Settings:
         if provider == 'openai' and not openai_key:
             raise ValueError("llm.openai_api_key required when provider=openai")
 
-        # Default models
         default_model = 'claude-3-5-sonnet-20241022' if provider == 'claude' else 'gpt-4o-mini'
 
         self.llm = LLMConfig(
@@ -154,12 +135,10 @@ class Settings:
             openai_api_key=openai_key
         )
 
-        # Validate temperature
         if not 0 <= self.llm.temperature <= 2:
             raise ValueError("llm.temperature must be between 0 and 2")
 
     def _parse_bot_config(self, config: Dict[str, Any]):
-        """Parse bot behavior configuration."""
         bot_config = config.get('bot', {})
 
         response_mode = bot_config.get('response_mode', 'probability').lower()
@@ -182,7 +161,6 @@ class Settings:
         )
 
     def _parse_paths_config(self, config: Dict[str, Any]):
-        """Parse paths configuration."""
         paths_config = config.get('paths', {})
 
         self.paths = PathsConfig(
@@ -192,7 +170,6 @@ class Settings:
         )
 
     def _parse_daemon_config(self, config: Dict[str, Any]):
-        """Parse daemon configuration."""
         daemon_config = config.get('daemon', {})
 
         self.daemon = DaemonConfig(
@@ -201,28 +178,19 @@ class Settings:
             auto_restart=bool(daemon_config.get('auto_restart', False))
         )
 
-        # Validate log level
         valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
         if self.daemon.log_level not in valid_levels:
             raise ValueError(f"daemon.log_level must be one of {valid_levels}")
 
     def validate(self) -> List[str]:
-        """Validate configuration and return list of warnings.
-
-        Returns:
-            List of warning messages (empty if all good)
-        """
         warnings = []
 
-        # Check corpus file
         if not self.paths.corpus.exists():
             warnings.append(f"Corpus file not found: {self.paths.corpus}")
 
-        # Check LLM configuration
         if self.llm.temperature > 1.5:
             warnings.append(f"High temperature ({self.llm.temperature}) may produce very random responses")
 
-        # Check bot configuration
         if self.bot.response_mode == 'all':
             warnings.append("Response mode 'all' may be spammy - consider 'probability' mode")
 
@@ -232,11 +200,6 @@ class Settings:
         return warnings
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert settings to dictionary (for display, without secrets).
-
-        Returns:
-            Dictionary representation of settings
-        """
         return {
             'telegram': {
                 'session_name': self.telegram.session_name,
@@ -267,7 +230,6 @@ class Settings:
         }
 
     def __repr__(self):
-        """String representation."""
         return (
             f"Settings(provider={self.llm.provider}, "
             f"mode={self.bot.response_mode}, "
