@@ -14,7 +14,7 @@ except ImportError:
     AsyncOpenAI = None
 
 from utils.corpus_loader import CorpusLoader
-from core.memory import Message
+from services.memory import Message
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ class StyleEngine:
         logger.info(f"StyleEngine initialized with {provider} ({self.model})")
 
     def _detect_tone(self, text: str) -> str:
+        text_lower = text.lower()
 
         aggressive_markers = [
             "бля", "хуй", "пиз", "еб", "сука", "дура", "идиот",

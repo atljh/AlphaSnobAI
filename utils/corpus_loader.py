@@ -27,7 +27,7 @@ class CorpusLoader:
             return
 
         try:
-            with open(self.corpus_path, "r", encoding="utf-8") as f:
+            with open(self.corpus_path, "r", encoding="utf-8", errors="ignore") as f:
                 self.raw_text = f.read()
 
             self.lines = [

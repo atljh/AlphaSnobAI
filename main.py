@@ -11,11 +11,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config.settings import get_settings
-from core.memory import Memory
-from core.style_engine import StyleEngine
-from core.message_handler import MessageHandler
-from core.telegram_client import AlphaSnobClient
-from core.daemon import setup_signal_handlers
+from services.memory import Memory
+from services.style import StyleEngine
+from bot.handlers import MessageHandler
+from bot.client import AlphaSnobClient
+from bot.daemon import setup_signal_handlers
 from utils.rich_logger import setup_rich_logging
 
 

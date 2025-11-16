@@ -9,10 +9,10 @@ import typer
 from rich.console import Console
 from rich.prompt import Confirm
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config.settings import get_settings
-from core.daemon import DaemonManager
+from bot.daemon import DaemonManager
 from utils.ui import (
     print_banner,
     create_status_panel,

@@ -3,7 +3,7 @@ from telethon import TelegramClient, events
 from telethon.tl.types import User
 
 from config.settings import get_settings
-from core.message_handler import MessageHandler
+from bot.handlers import MessageHandler
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ from datetime import datetime
 from telethon import events
 from telethon.tl.types import User
 
-from core.memory import Memory
-from core.style_engine import StyleEngine
+from services.memory import Memory
+from services.style import StyleEngine
 from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
