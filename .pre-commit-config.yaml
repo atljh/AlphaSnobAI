@@ -1,0 +1,112 @@
+# Pre-commit hooks for code quality
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - Fast Python linter (replaces flake8, isort, pyupgrade, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      # Run linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Run formatter
+      - id: ruff-format
+
+  # Mypy - Static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.5.0
+          - types-pyyaml
+          - types-psutil
+          - sqlalchemy[mypy]>=2.0.25
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tests/|migrations/)
+
+  # Black - Code formatter (backup if ruff-format has issues)
+  # - repo: https://github.com/psf/black
+  #   rev: 23.12.0
+  #   hooks:
+  #     - id: black
+
+  # Pre-commit hooks for files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Check file formatting
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+      # Python-specific
+      - id: debug-statements
+      - id: check-docstring-first
+      - id: check-ast
+      - id: name-tests-test
+        args: [--pytest-test-first]
+
+  # Security check
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: ^tests/
+
+  # Check for secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: package.lock.json
+
+  # Pytest - Run tests
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        args: [tests/, -v, --tb=short, --maxfail=1]
+        stages: [push]  # Only run on push, not on every commit
+
+# Global settings
+default_language_version:
+  python: python3.11
+
+# Stages
+default_stages: [commit]
+
+# Exclude directories
+exclude: |
+  (?x)^(
+      venv/|
+      \.venv/|
+      \.git/|
+      \.mypy_cache/|
+      \.pytest_cache/|
+      \.ruff_cache/|
+      __pycache__/|
+      build/|
+      dist/|
+      \.eggs/|
+      migrations/versions/
+  )$

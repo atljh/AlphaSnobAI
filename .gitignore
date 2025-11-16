@@ -1,43 +1,124 @@
-# Environment variables & secrets
-.env
-config/secrets.yaml
-config/config.yaml
-CLAUDE.md
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 venv/
-env/
 ENV/
+env/
+.venv
+
+# UV
+.uv/
+uv.lock
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.tox/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Linting
+.ruff_cache/
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+data/context.db
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Config & Secrets
+config/config.yaml
+config/secrets.yaml
+*.env
+.env
+CLAUDE.md
 
 # Telegram session files
 *.session
 *.session-journal
 
-# Database
-data/
-*.db
-*.sqlite
-*.sqlite3
+# OS
+.DS_Store
+Thumbs.db
 
-# Logs
-*.log
-logs/
+# Runtime
+*.pid
+data/*.pid
 
-# IDE
-.vscode/
-.idea/
+# Alembic
+# (keep migrations but ignore generated files)
+
+# Backup files
+*.bak
+*.backup
+data/backups/
+olds.txt.backup
+
+# Owner learning samples (may contain private data)
+data/owner_samples/collected/
+
+# Distribution / packaging
+*.whl
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Docker
+.dockerignore
+
+# Coverage reports
+coverage.xml
+*.coveragerc
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Vim
 *.swp
 *.swo
 *~
-
-# macOS
-.DS_Store
-
-# Project specific
-olds.txt.backup
 
