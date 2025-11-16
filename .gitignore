@@ -1,0 +1,43 @@
+# Environment variables & secrets
+.env
+config/secrets.yaml
+config/config.yaml
+CLAUDE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Telegram session files
+*.session
+*.session-journal
+
+# Database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Project specific
+olds.txt.backup
+
