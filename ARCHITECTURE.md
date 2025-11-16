@@ -1,292 +1,54 @@
-# 🏗️ AlphaSnobAI Architecture
+# AlphaSnobAI - Technical Architecture
 
-## Общий принцип работы
+## Overview
+
+AlphaSnobAI v2.0 is a sophisticated Telegram UserBot with a multi-persona system designed to fully replace a real user account. It combines AI-powered response generation, user profiling, intelligent decision-making, and human-like behavior simulation.
+
+## System Components
+
+### 1. **LanguageDetector** - Auto-detect message language (ru/en)
+### 2. **UserProfiler** - Track relationships and auto-upgrade levels
+### 3. **DecisionEngine** - Intelligent response probability calculation
+### 4. **PersonaManager** - Manage multiple personalities (alphasnob/normal/owner)
+### 5. **OwnerLearningSystem** - Analyze and mimic owner's writing style
+### 6. **TypingSimulator** - Realistic human-like delays and typing action
+### 7. **StyleEngine** - LLM API interface (Claude/OpenAI)
+### 8. **Memory** - Conversation history storage
+
+## Message Processing Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    TELEGRAM MESSAGE                         │
-│                           ↓                                 │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  core/telegram_client.py                            │   │
-│  │  - Получает событие NewMessage                      │   │
-│  │  - Передаёт в MessageHandler                        │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                           ↓                                 │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  core/message_handler.py                            │   │
-│  │  - Фильтрация (свои сообщения / триггеры)          │   │
-│  │  - Сохранение в память                              │   │
-│  │  - Решение: отвечать или нет?                       │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                           ↓                                 │
-│              ┌────────────┴────────────┐                    │
-│              ↓                         ↓                    │
-│  ┌───────────────────────┐  ┌──────────────────────┐       │
-│  │  core/memory.py       │  │  core/style_engine.py│       │
-│  │  - Загрузка контекста │  │  - Детекция тона     │       │
-│  │  - SQLite запрос      │  │  - Выбор примеров    │       │
-│  │  (последние N сообщ.) │  │  - Построение промпта│       │
-│  └───────────────────────┘  └──────────────────────┘       │
-│              ↓                         ↓                    │
-│              └────────────┬────────────┘                    │
-│                           ↓                                 │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  style_engine.generate_response()                   │   │
-│  │  ↓                                                   │   │
-│  │  Claude/OpenAI API                                  │   │
-│  │  ↓                                                   │   │
-│  │  GENERATED RESPONSE                                 │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                           ↓                                 │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  message_handler.py                                 │   │
-│  │  - Отправка ответа через Telegram                   │   │
-│  │  - Сохранение своего ответа в память                │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+Message → Language Detection → User Profiling → Decision Engine
+                                                      ↓ (respond?)
+              Persona Selection → Typing Simulation → LLM Generation → Send
 ```
 
-## Поток данных
+## Key Features
 
-### 1. Входящее сообщение
+- **Multi-Persona System:** Switch between troll, normal, and owner modes
+- **Relationship Tracking:** Automatically upgrade user levels (stranger→friend→close_friend)
+- **Intelligent Decisions:** Consider relationship, time, topic, and cooldown
+- **Owner Mimicry:** Learn from message samples to match owner's style
+- **Human-Like Behavior:** Realistic reading/thinking/typing delays
+- **Multi-Language:** Auto-detect and respond in Russian or English
 
-```python
-# telegram_client.py
-@client.on(events.NewMessage(incoming=True))
-async def on_new_message(event):
-    await message_handler.handle_message(event)
+## Database Schema
+
+**user_profiles:**
+- relationship_level, trust_score, interaction_count
+- Auto-upgrade thresholds: 5/20/100 interactions
+
+**messages:**
+- Conversation history with metadata (persona, response_delay, decision_score)
+
+## CLI Commands
+
+```bash
+python cli.py persona list
+python cli.py profile list  
+python cli.py owner analyze
+python cli.py stats chat <chat_id>
 ```
 
-### 2. Обработка и фильтрация
+See config.yaml for full configuration options.
 
-```python
-# message_handler.py
-async def handle_message(event):
-    # Пропустить свои сообщения
-    if event.sender_id == self.my_user_id:
-        return
-
-    # Сохранить в память
-    await memory.add_message(...)
-
-    # Проверить триггеры
-    if not self.should_respond(event):
-        return
-
-    # Продолжить обработку...
-```
-
-### 3. Генерация ответа
-
-```python
-# style_engine.py
-async def generate_response(incoming_message, context_messages):
-    # Детекция тона
-    tone = self._detect_tone(incoming_message)
-
-    # Получение примеров из корпуса
-    examples = corpus.get_adaptive_samples(tone, n=12)
-
-    # Построение промпта
-    system_prompt = self._build_system_prompt(tone, examples)
-    user_prompt = f"КОНТЕКСТ: {context}\nСООБЩЕНИЕ: {incoming_message}"
-
-    # Вызов LLM API
-    response = await self.client.messages.create(...)
-
-    return response.text
-```
-
-## Ключевые компоненты
-
-### config/settings.py
-**Назначение:** Централизованное управление конфигурацией
-
-**Методы:**
-- `__init__()` - Загрузка и валидация переменных окружения
-- `_get_required()` - Получение обязательных параметров
-
-**Данные:**
-- Telegram credentials (API_ID, API_HASH)
-- LLM configuration (provider, API key, model)
-- Response behavior (mode, probability, allowed users)
-- Paths (database, corpus)
-
-### core/memory.py
-**Назначение:** Управление контекстом диалогов
-
-**Схема БД:**
-```sql
-CREATE TABLE messages (
-    id INTEGER PRIMARY KEY,
-    chat_id INTEGER,
-    user_id INTEGER,
-    username TEXT,
-    text TEXT,
-    timestamp TEXT,
-    created_at TIMESTAMP
-);
-
-CREATE INDEX idx_chat_timestamp ON messages(chat_id, timestamp DESC);
-```
-
-**Методы:**
-- `initialize()` - Создание таблиц и индексов
-- `add_message()` - Сохранение сообщения
-- `get_context()` - Получение последних N сообщений
-- `get_context_text()` - Форматированный текст контекста
-- `get_chat_statistics()` - Статистика по чату
-
-### core/style_engine.py
-**Назначение:** Генерация ответов в стиле AlphaSnob
-
-**Методы:**
-- `_detect_tone()` - Анализ тона входящего сообщения
-- `_build_system_prompt()` - Построение system prompt с примерами
-- `_build_context_string()` - Форматирование контекста
-- `generate_response()` - Основной метод генерации
-- `_generate_claude()` / `_generate_openai()` - API calls
-- `_fallback_response()` - Запасной ответ при ошибке
-
-**Детекция тона:**
-```python
-aggressive: бля, хуй, пиз, еб, !!, урод → больше треша
-neutral: обычный текст → больше эстетики
-friendly: привет, спасибо, смайлы → сарказм + снобизм
-```
-
-### core/message_handler.py
-**Назначение:** Оркестрация всего процесса
-
-**Методы:**
-- `should_respond()` - Логика принятия решения об ответе
-- `handle_message()` - Основной обработчик
-- `get_statistics()` - Статистика
-
-**Режимы ответов:**
-- `all` - всегда отвечать
-- `specific_users` - только из списка
-- `probability` - с заданной вероятностью
-- `mentioned` - только при упоминании
-
-### utils/corpus_loader.py
-**Назначение:** Работа с корпусом стиля
-
-**Методы:**
-- `_load_corpus()` - Чтение файла olds.txt
-- `_categorize_lines()` - Категоризация по ключевым словам
-- `get_random_samples()` - Случайная выборка
-- `get_mixed_samples()` - Смешанная выборка с весами
-- `get_adaptive_samples()` - Адаптивная выборка по тону
-
-**Категории:**
-```python
-trash: омега, дырявый, обиженка, портвешок...
-aesthetic: уход, аромат, косметик, богатств...
-hyperbole: разорву, царств, миллион, бесконечн...
-threats: убью, сломаю, разорву, размаж...
-general: остальное
-```
-
-## Асинхронная архитектура
-
-Весь проект построен на `async/await`:
-
-```python
-# Основной цикл
-async def run():
-    memory = Memory(db_path)
-    await memory.initialize()  # async init
-
-    style_engine = StyleEngine(...)
-    message_handler = MessageHandler(memory, style_engine)
-
-    client = AlphaSnobClient(message_handler)
-    await client.run()  # async event loop
-
-asyncio.run(run())
-```
-
-**Преимущества:**
-- Неблокирующие операции БД (aiosqlite)
-- Эффективная работа с API (httpx в anthropic/openai)
-- Параллельная обработка нескольких сообщений
-- Низкая latency
-
-## Расширяемость
-
-### Добавление нового режима ответов
-
-```python
-# config/settings.py
-# Добавить новый режим в валидацию
-
-# message_handler.py
-def should_respond(self, event):
-    # ...
-    elif mode == "new_mode":
-        # Ваша логика
-        return True
-```
-
-### Добавление нового LLM провайдера
-
-```python
-# style_engine.py
-async def _generate_new_provider(self, system_prompt, user_prompt):
-    # Реализация вызова нового API
-    pass
-
-async def generate_response(self, ...):
-    if self.provider == "new_provider":
-        response = await self._generate_new_provider(...)
-```
-
-### Добавление команд управления
-
-```python
-# message_handler.py
-async def handle_message(self, event):
-    # Проверка на команду
-    if event.message.text.startswith("/"):
-        await self.handle_command(event)
-        return
-    # ...обычная обработка
-```
-
-## Безопасность
-
-### Секреты
-- Все API ключи в `.env` (не в git)
-- `.gitignore` защищает `.env` и `.session` файлы
-
-### Данные
-- SQLite база локальная (не передаётся)
-- Логи могут содержать сообщения (осторожно с чувствительной инфой)
-
-### Rate Limiting
-- Telegram: ~30 сообщений/секунду (userbot лимиты)
-- LLM API: зависит от плана (проверяйте лимиты)
-
-## Production рекомендации
-
-1. **Логирование:** Настроить ротацию логов
-2. **Мониторинг:** Отслеживать API costs
-3. **Backup:** Регулярный бэкап context.db
-4. **Error handling:** Retry логика для API
-5. **Graceful shutdown:** Корректное закрытие соединений
-
-## Метрики производительности
-
-**Задержка ответа:**
-- Memory lookup: ~10-50ms (SQLite)
-- LLM generation: ~1-5s (API зависимо)
-- Total: ~1.5-6s
-
-**Потребление памяти:**
-- Base: ~50-100MB
-- Per chat context: ~1-5MB (50 сообщений)
-
-**Стоимость (примерная):**
-- Claude Sonnet: ~$3-5 на 1000 сообщений
-- OpenAI GPT-4: ~$15-30 на 1000 сообщений

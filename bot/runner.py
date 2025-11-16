@@ -10,6 +10,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.settings import get_settings
 from services.memory import Memory
 from services.style import StyleEngine
+from services.persona_manager import PersonaManager
+from services.owner_learning import OwnerLearningSystem
+from services.typing_simulator import TypingSimulator
+from services.user_profiler import UserProfiler
+from services.decision_engine import DecisionEngine
+from utils.language_detector import LanguageDetector
 from bot.handlers import MessageHandler
 from bot.client import AlphaSnobClient
 from bot.interactive import InteractiveSession
@@ -24,12 +30,14 @@ async def run_interactive():
 
     settings = get_settings()
 
-    session.add_log("INFO", "Initializing components...")
+    session.add_log("INFO", "Initializing components with full persona system...")
 
+    # Memory
     memory = Memory(settings.paths.database)
     await memory.initialize()
     session.add_log("SUCCESS", "Memory initialized")
 
+    # LLM API
     api_key = (
         settings.llm.anthropic_api_key
         if settings.llm.provider == "claude"
@@ -44,13 +52,66 @@ async def run_interactive():
         temperature=settings.llm.temperature,
         max_tokens=settings.llm.max_tokens
     )
-    session.add_log("SUCCESS", "Style engine initialized")
+    session.add_log("SUCCESS", f"Style engine initialized ({settings.llm.provider})")
 
-    message_handler = MessageHandler(memory, style_engine, interactive_session=session)
+    # Persona Manager
+    persona_manager = PersonaManager(settings)
+    session.add_log("SUCCESS", f"Persona manager initialized ({len(persona_manager.personas)} personas)")
+
+    # Owner Learning (optional)
+    owner_learning = None
+    if settings.owner_learning.enabled:
+        try:
+            owner_learning = OwnerLearningSystem(
+                manual_samples_path=settings.owner_learning.manual_samples_path,
+                min_samples=settings.owner_learning.min_samples
+            )
+            if owner_learning.has_sufficient_samples():
+                session.add_log("SUCCESS", f"Owner learning initialized ({len(owner_learning.samples)} samples)")
+            else:
+                session.add_log("WARNING", f"Owner learning: insufficient samples ({len(owner_learning.samples)})")
+        except Exception as e:
+            session.add_log("WARNING", f"Owner learning failed: {e}")
+
+    # Language Detector
+    language_detector = LanguageDetector(
+        supported_languages=settings.language.supported,
+        default_language=settings.language.default
+    )
+    session.add_log("SUCCESS", f"Language detector initialized")
+
+    # Typing Simulator
+    typing_simulator = TypingSimulator(settings.typing)
+    session.add_log("SUCCESS", f"Typing simulator initialized")
+
+    # User Profiler
+    user_profiler = UserProfiler(settings.paths.database, settings.profiling)
+    await user_profiler.initialize()
+    session.add_log("SUCCESS", f"User profiler initialized")
+
+    # Decision Engine
+    decision_engine = DecisionEngine(settings.decision)
+    session.add_log("SUCCESS", f"Decision engine initialized")
+
+    # Message Handler (integrated)
+    message_handler = MessageHandler(
+        memory=memory,
+        style_engine=style_engine,
+        settings=settings,
+        persona_manager=persona_manager,
+        user_profiler=user_profiler,
+        typing_simulator=typing_simulator,
+        decision_engine=decision_engine,
+        language_detector=language_detector,
+        owner_learning=owner_learning,
+        interactive_session=session
+    )
     session.add_log("SUCCESS", "Message handler initialized")
 
+    # Telegram Client
     client = AlphaSnobClient(message_handler)
     session.add_log("SUCCESS", "Telegram client initialized")
+    session.add_log("INFO", f"Default persona: {settings.persona.default_mode}")
 
     shutdown_event = asyncio.Event()
 

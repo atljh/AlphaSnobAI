@@ -1,10 +1,12 @@
 import aiosqlite
 from pathlib import Path
 from typing import List, Dict, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
+
+from utils.db_migration import run_migration
 
 
 class Message:
@@ -66,6 +68,8 @@ class Memory:
 
             await db.commit()
 
+        await run_migration(self.db_path)
+
         self._initialized = True
         logger.info(f"Memory initialized at {self.db_path}")
 
@@ -75,7 +79,10 @@ class Memory:
         user_id: int,
         username: Optional[str],
         text: str,
-        timestamp: Optional[datetime] = None
+        timestamp: Optional[datetime] = None,
+        persona_mode: Optional[str] = None,
+        response_delay_ms: Optional[int] = None,
+        decision_score: Optional[float] = None
     ):
         """Add a message to memory.
 
@@ -85,6 +92,9 @@ class Memory:
             username: Username (can be None)
             text: Message text
             timestamp: Message timestamp (defaults to now)
+            persona_mode: Which persona was used (for bot messages)
+            response_delay_ms: Response delay in ms (for bot messages)
+            decision_score: Decision probability score
         """
         if not self._initialized:
             await self.initialize()
@@ -97,10 +107,14 @@ class Memory:
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute(
                 """
-                INSERT INTO messages (chat_id, user_id, username, text, timestamp)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO messages (
+                    chat_id, user_id, username, text, timestamp,
+                    persona_mode, response_delay_ms, decision_score
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (chat_id, user_id, username or "Unknown", text, timestamp_str)
+                (chat_id, user_id, username or "Unknown", text, timestamp_str,
+                 persona_mode, response_delay_ms, decision_score)
             )
             await db.commit()
 
@@ -232,3 +246,25 @@ class Memory:
             "unique_users": unique_users,
             "chat_id": chat_id
         }
+
+    async def count_recent_bot_messages(
+        self,
+        chat_id: int,
+        bot_user_id: int,
+        window_seconds: int = 60
+    ) -> int:
+        if not self._initialized:
+            await self.initialize()
+
+        cutoff_time = (datetime.now() - timedelta(seconds=window_seconds)).isoformat()
+
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute(
+                """
+                SELECT COUNT(*) FROM messages
+                WHERE chat_id = ? AND user_id = ? AND timestamp > ?
+                """,
+                (chat_id, bot_user_id, cutoff_time)
+            ) as cursor:
+                row = await cursor.fetchone()
+                return row[0] if row else 0
