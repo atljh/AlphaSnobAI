@@ -99,6 +99,9 @@ typing:
 
 # Decision engine - Smart response decisions
 decision:
+  # Base response probability (before multipliers)
+  base_probability: 0.8  # 80% base chance to respond
+
   # Response probability modifiers by relationship
   relationship_multipliers:
     owner: 1.0  # Always respond to owner
@@ -128,6 +131,13 @@ decision:
     recent_response_cooldown_seconds: 60
     max_consecutive_responses: 3
     consecutive_response_multiplier: 0.5
+
+  # Cooldown to prevent spam
+  cooldown:
+    enabled: true
+    min_seconds_between_responses: 30  # Wait at least 30s between responses
+    max_consecutive_responses: 3  # Max 3 responses in a row
+    reset_after_seconds: 300  # 5 minutes - reset consecutive counter
 
 # User profiling - Relationship tracking
 profiling:

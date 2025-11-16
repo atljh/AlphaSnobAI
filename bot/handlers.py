@@ -253,15 +253,15 @@ class MessageHandler:
                     response_text = await self.style_engine._generate_claude(
                         system_prompt=system_prompt,
                         user_prompt=user_prompt,
-                        max_tokens=self.settings.bot.max_tokens,
-                        temperature=self.settings.bot.temperature
+                        max_tokens=self.settings.llm.max_tokens,
+                        temperature=self.settings.llm.temperature
                     )
                 else:
                     response_text = await self.style_engine._generate_openai(
                         system_prompt=system_prompt,
                         user_prompt=user_prompt,
-                        max_tokens=self.settings.bot.max_tokens,
-                        temperature=self.settings.bot.temperature
+                        max_tokens=self.settings.llm.max_tokens,
+                        temperature=self.settings.llm.temperature
                     )
             except Exception as e:
                 logger.error(f"LLM generation failed: {e}")

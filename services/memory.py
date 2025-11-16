@@ -12,12 +12,18 @@ from utils.db_migration import run_migration
 class Message:
     """Represents a single message."""
 
-    def __init__(self, chat_id: int, user_id: int, username: str, text: str, timestamp: str):
+    def __init__(self, chat_id: int, user_id: int, username: str, text: str, timestamp):
         self.chat_id = chat_id
         self.user_id = user_id
         self.username = username
         self.text = text
-        self.timestamp = timestamp
+        # Convert string timestamp to datetime if needed
+        if isinstance(timestamp, str):
+            self.timestamp = datetime.fromisoformat(timestamp)
+        elif isinstance(timestamp, datetime):
+            self.timestamp = timestamp
+        else:
+            self.timestamp = datetime.now()
 
     def to_dict(self) -> Dict:
         return {
@@ -25,7 +31,7 @@ class Message:
             "user_id": self.user_id,
             "username": self.username,
             "text": self.text,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp
         }
 
     def __repr__(self):

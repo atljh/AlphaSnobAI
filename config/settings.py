@@ -121,11 +121,21 @@ class ContextAwareConfig:
 
 
 @dataclass
+class CooldownConfig:
+    enabled: bool
+    min_seconds_between_responses: int
+    max_consecutive_responses: int
+    reset_after_seconds: int
+
+
+@dataclass
 class DecisionConfig:
+    base_probability: float
     relationship_multipliers: Dict[str, float]
     time_based: TimeBasedConfig
     topic_based: TopicBasedConfig
     context_aware: ContextAwareConfig
+    cooldown: CooldownConfig
 
 
 @dataclass
@@ -374,6 +384,10 @@ class Settings:
     def _parse_decision_config(self, config: Dict[str, Any]):
         decision_config = config.get('decision', {})
 
+        base_probability = float(decision_config.get('base_probability', 0.8))
+        if not 0 <= base_probability <= 1:
+            raise ValueError("decision.base_probability must be between 0 and 1")
+
         relationship_multipliers = decision_config.get('relationship_multipliers', {
             'owner': 1.0,
             'close_friend': 0.9,
@@ -385,8 +399,10 @@ class Settings:
         time_based_cfg = decision_config.get('time_based', {})
         topic_based_cfg = decision_config.get('topic_based', {})
         context_aware_cfg = decision_config.get('context_aware', {})
+        cooldown_cfg = decision_config.get('cooldown', {})
 
         self.decision = DecisionConfig(
+            base_probability=base_probability,
             relationship_multipliers=relationship_multipliers,
             time_based=TimeBasedConfig(
                 enabled=bool(time_based_cfg.get('enabled', True)),
@@ -406,6 +422,12 @@ class Settings:
                 recent_response_cooldown_seconds=int(context_aware_cfg.get('recent_response_cooldown_seconds', 60)),
                 max_consecutive_responses=int(context_aware_cfg.get('max_consecutive_responses', 3)),
                 consecutive_response_multiplier=float(context_aware_cfg.get('consecutive_response_multiplier', 0.5))
+            ),
+            cooldown=CooldownConfig(
+                enabled=bool(cooldown_cfg.get('enabled', True)),
+                min_seconds_between_responses=int(cooldown_cfg.get('min_seconds_between_responses', 30)),
+                max_consecutive_responses=int(cooldown_cfg.get('max_consecutive_responses', 3)),
+                reset_after_seconds=int(cooldown_cfg.get('reset_after_seconds', 300))
             )
         )
 

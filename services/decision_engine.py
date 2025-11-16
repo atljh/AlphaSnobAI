@@ -153,14 +153,14 @@ class DecisionEngine:
         # Check for boring topics
         for boring_topic in self.config.topic_based.boring_topics:
             if boring_topic.lower() in message_lower:
-                multiplier = self.config.topic_based.boring_multiplier
+                multiplier = self.config.topic_based.boring_topic_multiplier
                 logger.debug(f"Boring topic detected '{boring_topic}': {multiplier}x")
                 return multiplier
 
         # Check for interesting topics
         for interesting_topic in self.config.topic_based.interesting_topics:
             if interesting_topic.lower() in message_lower:
-                multiplier = self.config.topic_based.interesting_multiplier
+                multiplier = self.config.topic_based.interesting_topic_multiplier
                 logger.debug(f"Interesting topic detected '{interesting_topic}': {multiplier}x")
                 return multiplier
 
