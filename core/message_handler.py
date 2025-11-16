@@ -7,7 +7,7 @@ from telethon.tl.types import User
 
 from core.memory import Memory
 from core.style_engine import StyleEngine
-from config.settings import settings
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,16 +43,17 @@ class MessageHandler:
         if event.sender_id == self.my_user_id:
             return False
 
-        mode = settings.response_mode
+        settings = get_settings()
+        mode = settings.bot.response_mode
 
         if mode == "all":
             return True
 
         elif mode == "specific_users":
-            return event.sender_id in settings.allowed_users
+            return event.sender_id in settings.bot.allowed_users
 
         elif mode == "probability":
-            return random.random() < settings.response_probability
+            return random.random() < settings.bot.response_probability
 
         elif mode == "mentioned":
             message_text = event.message.text.lower()
@@ -101,9 +102,10 @@ class MessageHandler:
 
             logger.info(f"Generating response for message from {username}")
 
+            settings = get_settings()
             context_messages = await self.memory.get_context(
                 chat_id=chat_id,
-                limit=settings.context_length
+                limit=settings.bot.context_length
             )
 
             response_text = await self.style_engine.generate_response(

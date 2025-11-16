@@ -2,7 +2,7 @@ import logging
 from telethon import TelegramClient, events
 from telethon.tl.types import User
 
-from config.settings import settings
+from config.settings import get_settings
 from core.message_handler import MessageHandler
 
 logger = logging.getLogger(__name__)
@@ -12,11 +12,12 @@ class AlphaSnobClient:
 
     def __init__(self, message_handler: MessageHandler):
         self.message_handler = message_handler
+        settings = get_settings()
 
         self.client = TelegramClient(
-            str(settings.base_dir / settings.session_name),
-            settings.api_id,
-            settings.api_hash
+            str(settings.base_dir / settings.telegram.session_name),
+            settings.telegram.api_id,
+            settings.telegram.api_hash
         )
 
         self._register_handlers()
@@ -32,6 +33,7 @@ class AlphaSnobClient:
         logger.info("Event handlers registered")
 
     async def start(self):
+        settings = get_settings()
         logger.info("Starting Telegram client...")
 
         await self.client.start()
@@ -43,12 +45,12 @@ class AlphaSnobClient:
                 username=me.username
             )
             logger.info(f"Bot started as @{me.username} (ID: {me.id})")
-            logger.info(f"Response mode: {settings.response_mode}")
+            logger.info(f"Response mode: {settings.bot.response_mode}")
 
-            if settings.response_mode == "probability":
-                logger.info(f"Response probability: {settings.response_probability}")
-            elif settings.response_mode == "specific_users":
-                logger.info(f"Allowed users: {settings.allowed_users}")
+            if settings.bot.response_mode == "probability":
+                logger.info(f"Response probability: {settings.bot.response_probability}")
+            elif settings.bot.response_mode == "specific_users":
+                logger.info(f"Allowed users: {settings.bot.allowed_users}")
 
         logger.info("AlphaSnob userbot is running!")
         logger.info("Press Ctrl+C to stop")

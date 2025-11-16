@@ -275,21 +275,11 @@ class Settings:
         )
 
 
-# Global settings instance (loaded lazily)
 _settings: Optional[Settings] = None
 
 
 def get_settings() -> Settings:
-    """Get global settings instance.
-
-    Returns:
-        Settings instance
-    """
     global _settings
     if _settings is None:
         _settings = Settings()
     return _settings
-
-
-# For backward compatibility
-settings = property(lambda self: get_settings())
