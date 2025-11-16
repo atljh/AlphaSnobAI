@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════
+# AlphaSnobAI Configuration
+# ═══════════════════════════════════════════════════════════
+# Copy this file to config.yaml and customize
+
+# Telegram settings
+telegram:
+  session_name: alphasnob_session
+
+# LLM settings
+llm:
+  provider: claude  # claude | openai
+  model: claude-3-5-sonnet-20241022  # or gpt-4, gpt-4-mini
+  temperature: 0.9  # 0.0-1.0, higher = more creative
+  max_tokens: 500   # Maximum response length
+
+# Bot behavior
+bot:
+  # Response mode:
+  # - all: Respond to every message
+  # - specific_users: Only respond to users in allowed_users
+  # - probability: Respond randomly with response_probability chance
+  # - mentioned: Only when mentioned or replied to
+  response_mode: probability
+
+  response_probability: 0.3  # 0.0-1.0 (used when mode=probability)
+
+  allowed_users: []  # List of user IDs (used when mode=specific_users)
+    # Example: [123456789, 987654321]
+
+  context_length: 50  # Number of previous messages to use as context
+
+# File paths
+paths:
+  corpus: olds.txt
+  database: data/context.db
+  logs: logs/alphasnob.log
+
+# Daemon settings
+daemon:
+  pid_file: data/alphasnob.pid
+  log_level: INFO  # DEBUG | INFO | WARNING | ERROR
+  auto_restart: false  # Auto-restart on crash

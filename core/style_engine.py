@@ -45,7 +45,7 @@ class StyleEngine:
             if AsyncOpenAI is None:
                 raise ImportError("openai package not installed. Run: pip install openai")
             self.client = AsyncOpenAI(api_key=api_key)
-            self.model = model or "gpt-4"
+            self.model = model or "gpt-4o-mini"
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
