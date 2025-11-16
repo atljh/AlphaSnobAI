@@ -17,9 +17,37 @@ from services.memory import Memory
 from services.user_profiler import UserProfiler
 from services.persona_manager import PersonaManager
 from services.owner_learning import OwnerLearningSystem
+from utils.setup_wizard import run_setup_wizard
 
 app = typer.Typer(help="AlphaSnobAI - Advanced Telegram UserBot")
 console = Console()
+
+
+# ============================================================================
+# SETUP COMMAND
+# ============================================================================
+
+@app.command("setup")
+def setup():
+    """🎨 Interactive setup wizard - Configure your bot with beautiful prompts."""
+    from pathlib import Path
+
+    base_dir = Path(__file__).parent
+    config_path = base_dir / "config" / "config.yaml"
+    secrets_path = base_dir / "config" / "secrets.yaml"
+
+    try:
+        success = run_setup_wizard(config_path, secrets_path)
+        if not success:
+            sys.exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Setup cancelled by user.[/yellow]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"\n[bold red]Setup failed:[/bold red] {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 # ============================================================================
@@ -334,27 +362,19 @@ def show_owner_samples(n: int = 10):
 
 @app.command("config")
 def show_config():
-    """Show current configuration."""
+    """Show current configuration in beautiful format."""
+    from utils.config_display import display_config
+
+    base_dir = Path(__file__).parent
+    config_path = base_dir / "config" / "config.yaml"
+    secrets_path = base_dir / "config" / "secrets.yaml"
+
     try:
-        settings = get_settings()
-
-        console.print("\n[bold cyan]⚙️  AlphaSnobAI Configuration[/bold cyan]\n")
-
-        console.print(f"[bold]Bot Mode:[/bold] {settings.bot.response_mode}")
-        console.print(f"[bold]Default Persona:[/bold] {settings.persona.default_mode}")
-        console.print(f"[bold]LLM Provider:[/bold] {settings.llm.provider} ({settings.llm.model})")
-        console.print(f"[bold]Typing Simulation:[/bold] {'Enabled' if settings.typing.enabled else 'Disabled'}")
-        console.print(f"[bold]User Profiling:[/bold] {'Enabled' if settings.profiling.enabled else 'Disabled'}")
-        console.print(f"[bold]Owner Learning:[/bold] {'Enabled' if settings.owner_learning.enabled else 'Disabled'}")
-        console.print(f"[bold]Decision Base Probability:[/bold] {settings.decision.base_probability}")
-
-        console.print(f"\n[bold]Paths:[/bold]")
-        console.print(f"  Database: {settings.paths.database}")
-        console.print(f"  Corpus: {settings.paths.corpus}")
-        console.print(f"  Logs: {settings.paths.logs}")
-
+        display_config(config_path, secrets_path)
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
