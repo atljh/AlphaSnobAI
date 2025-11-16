@@ -58,7 +58,7 @@ class InteractiveSession:
 
     def make_header(self) -> Panel:
         header = Text()
-        header.append("🎭 AlphaSnob AI - Interactive Mode", style="bold magenta")
+        header.append("AlphaSnob AI - Interactive Mode", style="bold magenta")
         header.append(" | ", style="dim")
         header.append("Press ", style="dim")
         header.append("Q", style="bold red")

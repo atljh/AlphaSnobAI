@@ -245,7 +245,7 @@ class MessageHandler:
             )
 
             # PHASE 8: Generate Response
-            logger.info(f"🤖 Generating response with {persona.name} persona...")
+            logger.info(f"Generating response with {persona.name} persona...")
 
             # Use style_engine's LLM client to generate response
             try:
