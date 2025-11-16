@@ -9,6 +9,7 @@ from services.memory import Memory
 from services.style import StyleEngine
 from services.persona_manager import PersonaManager
 from services.owner_learning import OwnerLearningSystem
+from services.owner_collector import OwnerMessageCollector
 from services.typing_simulator import TypingSimulator
 from services.user_profiler import UserProfiler
 from services.decision_engine import DecisionEngine
@@ -31,6 +32,7 @@ class MessageHandler:
         decision_engine: DecisionEngine,
         language_detector: LanguageDetector,
         owner_learning: Optional[OwnerLearningSystem] = None,
+        owner_collector: Optional[OwnerMessageCollector] = None,
         interactive_session=None
     ):
         self.memory = memory
@@ -42,6 +44,7 @@ class MessageHandler:
         self.decision_engine = decision_engine
         self.language_detector = language_detector
         self.owner_learning = owner_learning
+        self.owner_collector = owner_collector
         self.interactive_session = interactive_session
         self.my_user_id: Optional[int] = None
         self.my_username: Optional[str] = None
@@ -143,6 +146,14 @@ class MessageHandler:
                 timestamp=datetime.fromtimestamp(event.message.date.timestamp())
             )
 
+            # Auto-collect owner messages if enabled
+            if self.owner_collector and self.owner_collector.is_owner(user_id):
+                await self.owner_collector.collect_message(
+                    user_id=user_id,
+                    username=username,
+                    text=message_text
+                )
+
             # PHASE 1: User Profiling
             user_profile = await self.user_profiler.get_or_create_profile(
                 user_id=user_id,
@@ -243,6 +254,9 @@ class MessageHandler:
                 chat_id=chat_id,
                 message=message_text
             )
+
+            # Mark message as read in Telegram
+            await self.typing_simulator.mark_as_read(event.client, chat_id)
 
             # PHASE 8: Generate Response
             logger.info(f"Generating response with {persona.name} persona...")

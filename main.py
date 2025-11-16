@@ -67,6 +67,7 @@ async def initialize_components():
 
     # 4. Owner Learning System (optional)
     owner_learning = None
+    owner_collector = None
     if settings.owner_learning.enabled:
         try:
             owner_learning = OwnerLearningSystem(
@@ -77,6 +78,15 @@ async def initialize_components():
                 logger.success(f"✓ Owner learning initialized ({len(owner_learning.samples)} samples)")
             else:
                 logger.warning(f"⚠ Owner learning initialized with insufficient samples ({len(owner_learning.samples)}/{settings.owner_learning.min_samples})")
+
+            # Initialize owner collector for auto-collection
+            from services.owner_collector import OwnerMessageCollector
+            owner_collector = OwnerMessageCollector(settings.owner_learning)
+            if settings.owner_learning.auto_collect:
+                logger.success(f"✓ Owner collector initialized (auto_collect enabled)")
+            else:
+                logger.info("○ Owner collector initialized (auto_collect disabled)")
+
         except Exception as e:
             logger.warning(f"⚠ Owner learning failed to initialize: {e}")
     else:
@@ -112,7 +122,8 @@ async def initialize_components():
         typing_simulator=typing_simulator,
         decision_engine=decision_engine,
         language_detector=language_detector,
-        owner_learning=owner_learning
+        owner_learning=owner_learning,
+        owner_collector=owner_collector
     )
     logger.success("✓ Message handler initialized with full persona system")
 

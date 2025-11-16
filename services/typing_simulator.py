@@ -78,6 +78,19 @@ class TypingSimulator:
             logger.debug(f"Simulating read for {delay:.2f}s")
             await asyncio.sleep(delay)
 
+    async def mark_as_read(self, client, chat_id: int):
+        """Mark messages as read in Telegram.
+
+        Args:
+            client: Telegram client
+            chat_id: Chat ID to mark as read
+        """
+        try:
+            await client.send_read_acknowledge(chat_id)
+            logger.debug(f"Marked messages as read in chat {chat_id}")
+        except Exception as e:
+            logger.warning(f"Failed to mark messages as read: {e}")
+
     async def simulate_typing(self, client, chat_id: int, response: str):
         if not self.config.enabled or not self.config.typing_action.enabled:
             return

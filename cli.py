@@ -1012,6 +1012,173 @@ owner_app = typer.Typer(help="Manage owner learning system")
 app.add_typer(owner_app, name="owner")
 
 
+@owner_app.command("setup")
+def owner_setup():
+    """Interactive setup for owner learning."""
+    import questionary
+    from questionary import Style
+
+    custom_style = Style([
+        ('qmark', 'fg:#7c3aed bold'),
+        ('question', 'bold'),
+        ('answer', 'fg:#7c3aed bold'),
+    ])
+
+    console.print("\n[bold]Owner Learning Setup[/bold]\n")
+
+    try:
+        settings = get_settings()
+        base_dir = Path(__file__).parent
+        config_path = base_dir / "config" / "config.yaml"
+
+        # Get owner user ID
+        console.print("[dim]Enter your Telegram user ID (you can find it by messaging @userinfobot)[/dim]\n")
+
+        user_id_str = questionary.text(
+            "Your Telegram user ID:",
+            validate=lambda x: x.isdigit() or "Must be a number",
+            style=custom_style
+        ).ask()
+
+        if not user_id_str:
+            show_warning("Setup cancelled")
+            sys.exit(0)
+
+        owner_id = int(user_id_str)
+
+        # Ask about auto-collect
+        auto_collect = questionary.confirm(
+            "Enable auto-collection of your messages?",
+            default=True,
+            style=custom_style
+        ).ask()
+
+        if auto_collect is None:
+            show_warning("Setup cancelled")
+            sys.exit(0)
+
+        # Update config
+        import yaml
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+
+        if 'owner_learning' not in config:
+            config['owner_learning'] = {}
+
+        config['owner_learning']['owner_user_ids'] = [owner_id]
+        config['owner_learning']['auto_collect'] = auto_collect
+        config['owner_learning']['enabled'] = True
+
+        with open(config_path, 'w', encoding='utf-8') as f:
+            yaml.dump(config, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+        show_success("Owner learning configured!")
+        console.print(f"\nOwner user ID: {owner_id}")
+        console.print(f"Auto-collect: {'enabled' if auto_collect else 'disabled'}\n")
+
+        if auto_collect:
+            console.print("[dim]Your messages in group chats will be automatically collected[/dim]")
+        else:
+            console.print("[dim]Add samples manually to data/owner_samples/messages.txt[/dim]")
+
+        console.print("\n[bold]Next steps:[/bold]")
+        console.print("  python3 cli.py owner collect --from-db --limit 100")
+        console.print("  python3 cli.py owner analyze")
+        console.print()
+
+    except Exception as e:
+        show_error(f"Setup failed: {e}")
+        sys.exit(1)
+
+
+@owner_app.command("collect")
+def owner_collect(
+    from_db: bool = typer.Option(False, "--from-db", help="Collect from database"),
+    user_id: Optional[int] = typer.Option(None, "--user-id", help="User ID to collect from"),
+    limit: int = typer.Option(100, "--limit", "-n", help="Number of messages to collect")
+):
+    """Collect owner messages from database."""
+    async def _collect():
+        try:
+            settings = get_settings()
+
+            if not from_db:
+                show_warning("Only --from-db mode is currently supported")
+                show_info("Usage: python3 cli.py owner collect --from-db --user-id YOUR_ID --limit 100")
+                sys.exit(1)
+
+            # Determine user ID
+            if user_id is None:
+                if settings.owner_learning.owner_user_ids:
+                    user_id_to_use = settings.owner_learning.owner_user_ids[0]
+                    show_info(f"Using configured owner ID: {user_id_to_use}")
+                else:
+                    show_error("No owner user ID configured")
+                    show_info("Run: python3 cli.py owner setup")
+                    sys.exit(1)
+            else:
+                user_id_to_use = user_id
+
+            # Collect from database
+            import aiosqlite
+            async with aiosqlite.connect(settings.paths.database) as db:
+                cursor = await db.execute(
+                    """
+                    SELECT text FROM messages
+                    WHERE user_id = ? AND persona_mode IS NULL
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                    """,
+                    (user_id_to_use, limit)
+                )
+                messages = [row[0] for row in await cursor.fetchall()]
+
+            if not messages:
+                show_warning(f"No messages found for user {user_id_to_use}")
+                sys.exit(0)
+
+            # Save to manual samples file
+            samples_path = Path(settings.owner_learning.manual_samples_path)
+            samples_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Read existing samples
+            existing = set()
+            if samples_path.exists():
+                with open(samples_path, 'r', encoding='utf-8') as f:
+                    existing = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
+
+            # Add new unique messages
+            new_messages = [msg for msg in messages if msg not in existing]
+
+            if not new_messages:
+                show_info("No new messages to add (all already collected)")
+                sys.exit(0)
+
+            with open(samples_path, 'a', encoding='utf-8') as f:
+                f.write(f"\n# Collected from database on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                for msg in new_messages:
+                    f.write(f"{msg}\n")
+
+            show_success(f"Collected {len(new_messages)} new messages")
+            show_info(f"Total in file: {len(existing) + len(new_messages)}")
+            show_info(f"Saved to: {samples_path}\n")
+
+            if len(existing) + len(new_messages) >= settings.owner_learning.min_samples:
+                console.print("[bold]Ready to analyze![/bold]")
+                console.print("  python3 cli.py owner analyze\n")
+            else:
+                needed = settings.owner_learning.min_samples - len(existing) - len(new_messages)
+                console.print(f"[dim]Need {needed} more samples for analysis[/dim]\n")
+
+        except Exception as e:
+            show_error(f"Collection failed: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+
+    asyncio.run(_collect())
+
+
 @owner_app.command("analyze")
 def analyze_owner_style():
     """Analyze owner's writing style from samples."""

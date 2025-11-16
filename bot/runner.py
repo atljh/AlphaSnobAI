@@ -60,6 +60,7 @@ async def run_interactive():
 
     # Owner Learning (optional)
     owner_learning = None
+    owner_collector = None
     if settings.owner_learning.enabled:
         try:
             owner_learning = OwnerLearningSystem(
@@ -70,6 +71,15 @@ async def run_interactive():
                 session.add_log("SUCCESS", f"Owner learning initialized ({len(owner_learning.samples)} samples)")
             else:
                 session.add_log("WARNING", f"Owner learning: insufficient samples ({len(owner_learning.samples)})")
+
+            # Owner Collector
+            from services.owner_collector import OwnerMessageCollector
+            owner_collector = OwnerMessageCollector(settings.owner_learning)
+            if settings.owner_learning.auto_collect:
+                session.add_log("SUCCESS", "Owner collector initialized (auto_collect enabled)")
+            else:
+                session.add_log("INFO", "Owner collector initialized (auto_collect disabled)")
+
         except Exception as e:
             session.add_log("WARNING", f"Owner learning failed: {e}")
 
@@ -104,6 +114,7 @@ async def run_interactive():
         decision_engine=decision_engine,
         language_detector=language_detector,
         owner_learning=owner_learning,
+        owner_collector=owner_collector,
         interactive_session=session
     )
     session.add_log("SUCCESS", "Message handler initialized")
