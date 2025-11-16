@@ -2,6 +2,7 @@
 .env
 config/secrets.yaml
 config/config.yaml
+CLAUDE.md
 
 # Python
 __pycache__/
@@ -39,3 +40,4 @@ logs/
 
 # Project specific
 olds.txt.backup
+

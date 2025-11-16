@@ -1,5 +1,3 @@
-"""Interactive setup wizard for AlphaSnobAI configuration - Claude Code style."""
-
 import questionary
 from questionary import Style
 from rich.console import Console
@@ -12,7 +10,6 @@ import time
 
 console = Console()
 
-# Claude Code style theme
 custom_style = Style([
     ('qmark', 'fg:#7c3aed bold'),       # Purple question mark
     ('question', 'bold'),                # Bold questions
@@ -27,21 +24,18 @@ custom_style = Style([
 
 
 def print_header():
-    """Print minimal header."""
     console.print()
     console.print("[bold]AlphaSnobAI Setup[/bold]")
     console.print()
 
 
 def print_step(number: int, total: int, title: str):
-    """Print step header."""
     console.print()
     console.print(f"[dim]{number}/{total}[/dim] [bold]{title}[/bold]")
     console.print()
 
 
 def setup_persona():
-    """Configure persona settings."""
     print_step(1, 5, "Bot Personality")
 
     persona_choice = questionary.select(
@@ -66,7 +60,6 @@ def setup_persona():
 
 
 def setup_llm():
-    """Configure LLM provider."""
     print_step(2, 5, "AI Provider")
 
     provider = questionary.select(

@@ -17,26 +17,67 @@ from gui.backend.bot_process import BotProcessManager
 # Import widgets
 from gui.widgets.bot_control import BotControlWidget
 from gui.widgets.log_viewer import LogViewerWidget
+from gui.widgets.settings_editor import SettingsEditorWidget
+from gui.widgets.database_viewer import DatabaseViewerWidget
+from gui.widgets.statistics import StatisticsWidget
+from gui.widgets.owner_learning import OwnerLearningWidget
 
 
 class PlaceholderWidget(QWidget):
-    """Placeholder widget for development."""
+    """Placeholder widget for development with glassmorphism design."""
 
     def __init__(self, name: str):
         super().__init__()
         layout = QVBoxLayout(self)
-        label = QLabel(f"<h1>{name}</h1><p>This screen is under development.</p>")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setAlignment(Qt.AlignCenter)
+
+        # Glass card container
+        card = QWidget()
+        card.setObjectName("glassCard")
+        card.setMaximumWidth(600)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(40, 40, 40, 40)
+        card_layout.setSpacing(16)
+
+        # Title
+        title = QLabel(name)
+        title.setStyleSheet("""
+            QLabel {
+                font-size: 28px;
+                font-weight: 700;
+                color: #f1f5f9;
+            }
+        """)
+        title.setAlignment(Qt.AlignCenter)
+        card_layout.addWidget(title)
+
+        # Description
+        desc = QLabel("This feature is under development and will be available soon.")
+        desc.setWordWrap(True)
+        desc.setStyleSheet("""
+            QLabel {
+                font-size: 15px;
+                color: #cbd5e1;
+                line-height: 1.6;
+            }
+        """)
+        desc.setAlignment(Qt.AlignCenter)
+        card_layout.addWidget(desc)
+
+        layout.addWidget(card, alignment=Qt.AlignCenter)
 
 
 class MainWindow(QMainWindow):
     """Main application window."""
 
-    def __init__(self):
+    def __init__(self, theme_manager=None):
         super().__init__()
         self.setWindowTitle("AlphaSnobAI - Bot Management")
         self.resize(1200, 800)
+
+        # Store theme manager
+        self.theme_manager = theme_manager
 
         # Create bot process manager
         self.bot_manager = BotProcessManager()
@@ -81,44 +122,23 @@ class MainWindow(QMainWindow):
     def _create_sidebar(self) -> QListWidget:
         """Create sidebar navigation."""
         sidebar = QListWidget()
-        sidebar.setMaximumWidth(200)
-        sidebar.setMinimumWidth(150)
+        sidebar.setMaximumWidth(220)
+        sidebar.setMinimumWidth(180)
 
         # Add navigation items
         items = [
-            "📊 Dashboard",
-            "📋 Logs",
-            "⚙️ Settings",
-            "🎓 Owner Learning",
-            "📈 Statistics",
-            "🗄️ Database",
+            "Dashboard",
+            "Logs",
+            "Settings",
+            "Owner Learning",
+            "Statistics",
+            "Database",
         ]
 
         for item in items:
             sidebar.addItem(item)
 
-        # Style
-        sidebar.setStyleSheet("""
-            QListWidget {
-                background-color: #2b2b2b;
-                border: none;
-                border-right: 1px solid #3d3d3d;
-                font-size: 14px;
-                padding: 10px 0;
-            }
-            QListWidget::item {
-                padding: 12px 20px;
-                border-bottom: 1px solid #3d3d3d;
-            }
-            QListWidget::item:selected {
-                background-color: #0d47a1;
-                color: white;
-            }
-            QListWidget::item:hover {
-                background-color: #3d3d3d;
-            }
-        """)
-
+        # Styling is handled by theme QSS files
         return sidebar
 
     def _add_screens(self):
@@ -131,53 +151,122 @@ class MainWindow(QMainWindow):
         self.logs_widget = LogViewerWidget(self.bot_manager)
         self.content_stack.addWidget(self.logs_widget)
 
-        # Settings (placeholder for now)
-        self.settings_widget = PlaceholderWidget("Settings Editor")
+        # Settings - use SettingsEditorWidget
+        self.settings_widget = SettingsEditorWidget()
         self.content_stack.addWidget(self.settings_widget)
 
-        # Owner Learning (placeholder for now)
-        self.owner_widget = PlaceholderWidget("Owner Learning")
+        # Owner Learning - use OwnerLearningWidget
+        self.owner_widget = OwnerLearningWidget()
         self.content_stack.addWidget(self.owner_widget)
 
-        # Statistics (placeholder for now)
-        self.stats_widget = PlaceholderWidget("Statistics")
+        # Statistics - use StatisticsWidget
+        self.stats_widget = StatisticsWidget()
         self.content_stack.addWidget(self.stats_widget)
 
-        # Database (placeholder for now)
-        self.db_widget = PlaceholderWidget("Database Manager")
+        # Database - use DatabaseViewerWidget
+        self.db_widget = DatabaseViewerWidget()
         self.content_stack.addWidget(self.db_widget)
 
     def _create_dashboard(self) -> QWidget:
-        """Create dashboard widget."""
+        """Create dashboard widget with glassmorphism design."""
         dashboard = QWidget()
         layout = QHBoxLayout(dashboard)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
         # Left side - Bot Control
         self.bot_control_widget = BotControlWidget(self.bot_manager)
-        self.bot_control_widget.setMaximumWidth(400)
+        self.bot_control_widget.setMaximumWidth(420)
         layout.addWidget(self.bot_control_widget)
 
-        # Right side - Info/Stats
+        # Right side - Info/Stats with glass cards
         info_widget = QWidget()
         info_layout = QVBoxLayout(info_widget)
+        info_layout.setSpacing(20)
 
-        # Welcome message
-        welcome_label = QLabel(
-            "<h1>Welcome to AlphaSnobAI</h1>"
-            "<p>Desktop management application for your Telegram bot.</p>"
-        )
-        welcome_label.setAlignment(Qt.AlignTop)
-        info_layout.addWidget(welcome_label)
+        # Welcome card
+        welcome_card = QWidget()
+        welcome_card.setObjectName("glassCard")
+        welcome_layout = QVBoxLayout(welcome_card)
+        welcome_layout.setContentsMargins(24, 24, 24, 24)
 
-        # Quick stats placeholder
-        stats_label = QLabel(
-            "<h2>Quick Stats</h2>"
-            "<p>• Messages processed: --</p>"
-            "<p>• Responses sent: --</p>"
-            "<p>• Response rate: --</p>"
-        )
-        stats_label.setAlignment(Qt.AlignTop)
-        info_layout.addWidget(stats_label)
+        welcome_title = QLabel("Welcome to AlphaSnobAI")
+        welcome_title.setStyleSheet("""
+            QLabel {
+                font-size: 24px;
+                font-weight: 700;
+                color: #f1f5f9;
+                margin-bottom: 8px;
+            }
+        """)
+        welcome_layout.addWidget(welcome_title)
+
+        welcome_desc = QLabel("Modern desktop application for managing your Telegram bot with style.")
+        welcome_desc.setWordWrap(True)
+        welcome_desc.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                color: #cbd5e1;
+                line-height: 1.6;
+            }
+        """)
+        welcome_layout.addWidget(welcome_desc)
+
+        info_layout.addWidget(welcome_card)
+
+        # Quick stats card
+        stats_card = QWidget()
+        stats_card.setObjectName("glassCard")
+        stats_layout = QVBoxLayout(stats_card)
+        stats_layout.setContentsMargins(24, 24, 24, 24)
+        stats_layout.setSpacing(16)
+
+        stats_title = QLabel("Quick Stats")
+        stats_title.setStyleSheet("""
+            QLabel {
+                font-size: 18px;
+                font-weight: 600;
+                color: #f1f5f9;
+                margin-bottom: 8px;
+            }
+        """)
+        stats_layout.addWidget(stats_title)
+
+        # Stats items with gradient accents
+        stats_items = [
+            ("Messages processed", "--", "#10b981"),
+            ("Responses sent", "--", "#8b5cf6"),
+            ("Response rate", "--", "#06b6d4"),
+        ]
+
+        for label, value, color in stats_items:
+            stat_item = QWidget()
+            stat_layout = QHBoxLayout(stat_item)
+            stat_layout.setContentsMargins(0, 8, 0, 8)
+
+            stat_label = QLabel(f"• {label}:")
+            stat_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    color: #cbd5e1;
+                }}
+            """)
+            stat_layout.addWidget(stat_label)
+
+            stat_value = QLabel(value)
+            stat_value.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: {color};
+                }}
+            """)
+            stat_layout.addWidget(stat_value)
+            stat_layout.addStretch()
+
+            stats_layout.addWidget(stat_item)
+
+        info_layout.addWidget(stats_card)
 
         info_layout.addStretch()
 
@@ -220,6 +309,39 @@ class MainWindow(QMainWindow):
         restart_action.setShortcut("Ctrl+R")
         bot_menu.addAction(restart_action)
 
+        # View menu
+        view_menu = menubar.addMenu("&View")
+
+        # Theme submenu
+        theme_menu = view_menu.addMenu("Theme")
+
+        # Glass themes (modern)
+        glass_dark_action = QAction("Glass Dark (Modern)", self)
+        glass_dark_action.triggered.connect(lambda: self._apply_theme_by_name("glass_dark"))
+        theme_menu.addAction(glass_dark_action)
+
+        glass_light_action = QAction("Glass Light (Modern)", self)
+        glass_light_action.triggered.connect(lambda: self._apply_theme_by_name("glass_light"))
+        theme_menu.addAction(glass_light_action)
+
+        theme_menu.addSeparator()
+
+        # macOS themes (classic)
+        macos_dark_action = QAction("macOS Dark (Classic)", self)
+        macos_dark_action.triggered.connect(lambda: self._apply_theme_by_name("macos_dark"))
+        theme_menu.addAction(macos_dark_action)
+
+        macos_light_action = QAction("macOS Light (Classic)", self)
+        macos_light_action.triggered.connect(lambda: self._apply_theme_by_name("macos_light"))
+        theme_menu.addAction(macos_light_action)
+
+        theme_menu.addSeparator()
+
+        toggle_theme_action = QAction("Toggle Theme", self)
+        toggle_theme_action.setShortcut("Ctrl+Shift+T")
+        toggle_theme_action.triggered.connect(self._toggle_theme)
+        theme_menu.addAction(toggle_theme_action)
+
         # Help menu
         help_menu = menubar.addMenu("&Help")
 
@@ -244,14 +366,7 @@ class MainWindow(QMainWindow):
         status = self.bot_manager.get_status()
 
         # Update status label
-        status_icons = {
-            "running": "🟢",
-            "stopped": "🔴",
-            "starting": "🟡",
-            "stopping": "🟡"
-        }
-        icon = status_icons.get(status["status"], "🔴")
-        self.status_label.setText(f"Bot Status: {icon} {status['status'].title()}")
+        self.status_label.setText(f"Bot Status: {status['status'].title()}")
 
         # Update uptime
         if status["uptime"]:
@@ -261,6 +376,25 @@ class MainWindow(QMainWindow):
             self.uptime_label.setText(f"Uptime: {hours:02d}:{minutes:02d}:{seconds:02d}")
         else:
             self.uptime_label.setText("Uptime: --")
+
+    def _apply_theme_by_name(self, theme_name: str):
+        """Apply theme by name."""
+        if self.theme_manager:
+            from gui.themes import Theme
+            theme_map = {
+                "glass_dark": Theme.GLASS_DARK,
+                "glass_light": Theme.GLASS_LIGHT,
+                "macos_dark": Theme.MACOS_DARK,
+                "macos_light": Theme.MACOS_LIGHT,
+            }
+            theme = theme_map.get(theme_name)
+            if theme:
+                self.theme_manager.apply_theme(theme)
+
+    def _toggle_theme(self):
+        """Toggle between light and dark themes."""
+        if self.theme_manager:
+            self.theme_manager.toggle_theme()
 
     def closeEvent(self, event):
         """Handle window close event."""

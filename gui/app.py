@@ -22,6 +22,7 @@ except ImportError:
     sys.exit(1)
 
 from gui.main_window import MainWindow
+from gui.themes import ThemeManager, Theme
 
 
 class AlphaSnobApp:
@@ -46,44 +47,15 @@ class AlphaSnobApp:
         # Set asyncio event loop policy for Qt integration
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
-        # Apply dark theme
-        self._apply_theme()
+        # Create theme manager
+        self.theme_manager = ThemeManager()
 
-        # Create main window
-        self.main_window = MainWindow()
+        # Apply theme
+        self.theme_manager.apply_theme(self.theme_manager.current_theme, self.app)
 
-    def _apply_theme(self):
-        """Apply dark theme to application."""
-        try:
-            import qdarkstyle
-            self.app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside6'))
-        except ImportError:
-            # Fallback to basic dark palette if qdarkstyle not available
-            self._apply_basic_dark_theme()
+        # Create main window (pass theme manager)
+        self.main_window = MainWindow(self.theme_manager)
 
-    def _apply_basic_dark_theme(self):
-        """Apply basic dark theme without qdarkstyle."""
-        from PySide6.QtGui import QPalette, QColor
-        from PySide6.QtCore import Qt
-
-        palette = QPalette()
-
-        # Dark colors
-        palette.setColor(QPalette.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.WindowText, Qt.white)
-        palette.setColor(QPalette.Base, QColor(35, 35, 35))
-        palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
-        palette.setColor(QPalette.ToolTipText, Qt.white)
-        palette.setColor(QPalette.Text, Qt.white)
-        palette.setColor(QPalette.Button, QColor(53, 53, 53))
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        palette.setColor(QPalette.BrightText, Qt.red)
-        palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
-
-        self.app.setPalette(palette)
 
     def run(self):
         """Run the application."""

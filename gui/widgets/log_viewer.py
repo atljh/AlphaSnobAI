@@ -57,25 +57,41 @@ class LogViewerWidget(QWidget):
         self._load_existing_logs()
 
     def _create_ui(self):
-        """Create user interface."""
+        """Create user interface with glassmorphism design."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
 
-        # Toolbar
+        # Toolbar with glass styling
         toolbar = QWidget()
+        toolbar.setObjectName("glassCard")
+        toolbar.setStyleSheet("""
+            QWidget#glassCard {
+                padding: 12px;
+            }
+        """)
         toolbar_layout = QHBoxLayout(toolbar)
+        toolbar_layout.setSpacing(12)
 
         # Level filter
-        toolbar_layout.addWidget(QLabel("Level:"))
+        level_label = QLabel("Level:")
+        level_label.setStyleSheet("color: #cbd5e1; font-weight: 600;")
+        toolbar_layout.addWidget(level_label)
+
         self.level_combo = QComboBox()
         self.level_combo.addItems(["ALL", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR"])
+        self.level_combo.setMinimumWidth(120)
         self.level_combo.currentTextChanged.connect(self._on_filter_changed)
         toolbar_layout.addWidget(self.level_combo)
 
         # Search filter
-        toolbar_layout.addWidget(QLabel("Search:"))
+        search_label = QLabel("Search:")
+        search_label.setStyleSheet("color: #cbd5e1; font-weight: 600;")
+        toolbar_layout.addWidget(search_label)
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Filter logs...")
+        self.search_input.setMinimumWidth(200)
         self.search_input.textChanged.connect(self._on_filter_changed)
         toolbar_layout.addWidget(self.search_input)
 
@@ -85,32 +101,74 @@ class LogViewerWidget(QWidget):
         self.autoscroll_checkbox.stateChanged.connect(self._on_autoscroll_toggled)
         toolbar_layout.addWidget(self.autoscroll_checkbox)
 
-        # Clear button
+        toolbar_layout.addStretch()
+
+        # Clear button with gradient
         clear_button = QPushButton("Clear")
+        clear_button.setMinimumHeight(36)
+        clear_button.setCursor(Qt.PointingHandCursor)
+        clear_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #ef4444,
+                    stop:1 #f59e0b
+                );
+                color: white;
+                font-size: 13px;
+                font-weight: 600;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 20px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #dc2626,
+                    stop:1 #d97706
+                );
+            }
+        """)
         clear_button.clicked.connect(self._on_clear_clicked)
         toolbar_layout.addWidget(clear_button)
 
-        # Export button
+        # Export button with gradient
         export_button = QPushButton("Export")
+        export_button.setMinimumHeight(36)
+        export_button.setCursor(Qt.PointingHandCursor)
+        export_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6366f1,
+                    stop:1 #8b5cf6
+                );
+                color: white;
+                font-size: 13px;
+                font-weight: 600;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 20px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #4f46e5,
+                    stop:1 #7c3aed
+                );
+            }
+        """)
         export_button.clicked.connect(self._on_export_clicked)
         toolbar_layout.addWidget(export_button)
 
-        toolbar_layout.addStretch()
-
         layout.addWidget(toolbar)
 
-        # Log text area
+        # Log text area with glass styling
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
-        self.log_text.setFont(QFont("Courier", 10))
+        self.log_text.setFont(QFont("JetBrains Mono", 12))
         self.log_text.setLineWrapMode(QTextEdit.NoWrap)
-        self.log_text.setStyleSheet("""
-            QTextEdit {
-                background-color: #1e1e1e;
-                color: #d4d4d4;
-                border: none;
-            }
-        """)
+        # Styling handled by theme QSS
         layout.addWidget(self.log_text)
 
     def _load_existing_logs(self):
@@ -195,22 +253,23 @@ class LogViewerWidget(QWidget):
             return "INFO"
 
     def _append_colored_line(self, line: str, level: str):
-        """Append line with color formatting."""
+        """Append line with modern neon color formatting."""
         cursor = self.log_text.textCursor()
         cursor.movePosition(QTextCursor.End)
 
         # Create format based on level
         fmt = QTextCharFormat()
 
+        # Modern vibrant neon colors
         colors = {
-            "ERROR": QColor(255, 100, 100),      # Red
-            "WARNING": QColor(255, 165, 0),      # Orange
-            "SUCCESS": QColor(100, 255, 100),    # Green
-            "INFO": QColor(100, 150, 255),       # Blue
-            "DEBUG": QColor(150, 150, 150),      # Gray
+            "ERROR": QColor(239, 68, 68),        # #ef4444 - Bright Red
+            "WARNING": QColor(245, 158, 11),     # #f59e0b - Bright Orange
+            "SUCCESS": QColor(16, 185, 129),     # #10b981 - Bright Green
+            "INFO": QColor(99, 102, 241),        # #6366f1 - Bright Indigo
+            "DEBUG": QColor(148, 163, 184),      # #94a3b8 - Light Gray
         }
 
-        fmt.setForeground(colors.get(level, QColor(212, 212, 212)))
+        fmt.setForeground(colors.get(level, QColor(203, 213, 225)))
 
         # Insert text with format
         cursor.insertText(line + "\n", fmt)

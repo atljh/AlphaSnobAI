@@ -129,14 +129,6 @@ class StatsCollector:
             )
 
     async def get_chat_stats(self, chat_id: int) -> Optional[ChatStats]:
-        """Get statistics for a specific chat.
-
-        Args:
-            chat_id: Chat ID
-
-        Returns:
-            Chat statistics or None if not found
-        """
         async with aiosqlite.connect(self.db_path) as db:
             # Total messages
             cursor = await db.execute(
@@ -179,14 +171,6 @@ class StatsCollector:
             )
 
     async def get_user_stats(self, user_id: int) -> Optional[UserStats]:
-        """Get statistics for a specific user.
-
-        Args:
-            user_id: User ID
-
-        Returns:
-            User statistics or None if not found
-        """
         async with aiosqlite.connect(self.db_path) as db:
             # Get profile
             db.row_factory = aiosqlite.Row
@@ -226,14 +210,6 @@ class StatsCollector:
             )
 
     async def get_top_chats(self, limit: int = 5) -> List[Dict[str, Any]]:
-        """Get top chats by message count.
-
-        Args:
-            limit: Number of chats to return
-
-        Returns:
-            List of chat info dicts
-        """
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             cursor = await db.execute(
@@ -251,14 +227,6 @@ class StatsCollector:
             return [dict(row) for row in rows]
 
     async def get_top_users(self, limit: int = 5) -> List[Dict[str, Any]]:
-        """Get top users by message count.
-
-        Args:
-            limit: Number of users to return
-
-        Returns:
-            List of user info dicts
-        """
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             cursor = await db.execute(
@@ -277,11 +245,6 @@ class StatsCollector:
             return [dict(row) for row in rows]
 
     async def get_persona_stats(self) -> List[PersonaStats]:
-        """Get persona usage statistics.
-
-        Returns:
-            List of persona statistics
-        """
         async with aiosqlite.connect(self.db_path) as db:
             # Total bot messages
             cursor = await db.execute(
@@ -316,11 +279,6 @@ class StatsCollector:
             return stats
 
     async def get_decision_stats(self) -> Dict[str, Any]:
-        """Get decision engine statistics.
-
-        Returns:
-            Decision statistics dict
-        """
         async with aiosqlite.connect(self.db_path) as db:
             # Average score
             cursor = await db.execute(
@@ -359,14 +317,6 @@ class StatsCollector:
             }
 
     async def export_stats(self, format: str = 'json') -> Dict[str, Any]:
-        """Export all statistics.
-
-        Args:
-            format: Export format ('json' or 'dict')
-
-        Returns:
-            Statistics dictionary
-        """
         general = await self.get_general_stats()
         top_chats = await self.get_top_chats()
         top_users = await self.get_top_users()

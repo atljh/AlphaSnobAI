@@ -38,110 +38,178 @@ class BotControlWidget(QWidget):
     def _create_ui(self):
         """Create user interface."""
         layout = QVBoxLayout(self)
+        layout.setSpacing(16)
+        layout.setContentsMargins(16, 16, 16, 16)
 
-        # Status group
+        # Status group with glass card styling
         status_group = QGroupBox("Bot Status")
+        status_group.setObjectName("glassCard")
         status_layout = QVBoxLayout(status_group)
+        status_layout.setSpacing(16)
 
-        # Status indicator
+        # Status indicator with larger modern style
         status_indicator_layout = QHBoxLayout()
 
-        self.status_icon = QLabel("🔴")
-        self.status_icon.setFont(QFont("Arial", 24))
+        # Status indicator dot
+        self.status_icon = QLabel("●")
+        self.status_icon.setFont(QFont("Arial", 32))
+        self.status_icon.setStyleSheet("color: #ef4444;")  # Red by default
         status_indicator_layout.addWidget(self.status_icon)
 
         self.status_label = QLabel("Stopped")
-        self.status_label.setFont(QFont("Arial", 16, QFont.Bold))
+        self.status_label.setFont(QFont("Inter", 18, QFont.Bold))
+        self.status_label.setStyleSheet("color: #e2e8f0;")
         status_indicator_layout.addWidget(self.status_label)
 
         status_indicator_layout.addStretch()
 
         status_layout.addLayout(status_indicator_layout)
 
-        # Process info
+        # Process info with modern styling
         info_layout = QVBoxLayout()
+        info_layout.setSpacing(8)
 
         self.pid_label = QLabel("PID: --")
+        self.pid_label.setStyleSheet("font-size: 13px; color: #cbd5e1; padding: 4px;")
         info_layout.addWidget(self.pid_label)
 
         self.uptime_label = QLabel("Uptime: --")
+        self.uptime_label.setStyleSheet("font-size: 13px; color: #cbd5e1; padding: 4px;")
         info_layout.addWidget(self.uptime_label)
 
         self.cpu_label = QLabel("CPU: --")
+        self.cpu_label.setStyleSheet("font-size: 13px; color: #cbd5e1; padding: 4px;")
         info_layout.addWidget(self.cpu_label)
 
         self.memory_label = QLabel("Memory: --")
+        self.memory_label.setStyleSheet("font-size: 13px; color: #cbd5e1; padding: 4px;")
         info_layout.addWidget(self.memory_label)
 
         status_layout.addLayout(info_layout)
 
         layout.addWidget(status_group)
 
-        # Control buttons
+        # Control buttons with glass card styling
         control_group = QGroupBox("Controls")
+        control_group.setObjectName("glassCard")
         control_layout = QVBoxLayout(control_group)
+        control_layout.setSpacing(12)
 
-        # Start button
-        self.start_button = QPushButton("▶️  Start Bot")
-        self.start_button.setMinimumHeight(40)
+        # Start button with green gradient
+        self.start_button = QPushButton("Start Bot")
+        self.start_button.setMinimumHeight(48)
+        self.start_button.setCursor(Qt.PointingHandCursor)
         self.start_button.setStyleSheet("""
             QPushButton {
-                background-color: #2e7d32;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #10b981,
+                    stop:1 #06b6d4
+                );
                 color: white;
-                font-size: 14px;
-                font-weight: bold;
-                border-radius: 5px;
+                font-size: 15px;
+                font-weight: 600;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 24px;
             }
             QPushButton:hover {
-                background-color: #43a047;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #059669,
+                    stop:1 #0891b2
+                );
+            }
+            QPushButton:pressed {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #047857,
+                    stop:1 #0e7490
+                );
             }
             QPushButton:disabled {
-                background-color: #666;
-                color: #999;
+                background: rgba(71, 85, 105, 0.5);
+                color: #64748b;
             }
         """)
         self.start_button.clicked.connect(self._on_start_clicked)
         control_layout.addWidget(self.start_button)
 
-        # Stop button
-        self.stop_button = QPushButton("⏹️  Stop Bot")
-        self.stop_button.setMinimumHeight(40)
+        # Stop button with red gradient
+        self.stop_button = QPushButton("Stop Bot")
+        self.stop_button.setMinimumHeight(48)
+        self.stop_button.setCursor(Qt.PointingHandCursor)
         self.stop_button.setStyleSheet("""
             QPushButton {
-                background-color: #c62828;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #ef4444,
+                    stop:1 #f59e0b
+                );
                 color: white;
-                font-size: 14px;
-                font-weight: bold;
-                border-radius: 5px;
+                font-size: 15px;
+                font-weight: 600;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 24px;
             }
             QPushButton:hover {
-                background-color: #e53935;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #dc2626,
+                    stop:1 #d97706
+                );
+            }
+            QPushButton:pressed {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #b91c1c,
+                    stop:1 #b45309
+                );
             }
             QPushButton:disabled {
-                background-color: #666;
-                color: #999;
+                background: rgba(71, 85, 105, 0.5);
+                color: #64748b;
             }
         """)
         self.stop_button.clicked.connect(self._on_stop_clicked)
         control_layout.addWidget(self.stop_button)
 
-        # Restart button
-        self.restart_button = QPushButton("🔄  Restart Bot")
-        self.restart_button.setMinimumHeight(40)
+        # Restart button with purple gradient
+        self.restart_button = QPushButton("Restart Bot")
+        self.restart_button.setMinimumHeight(48)
+        self.restart_button.setCursor(Qt.PointingHandCursor)
         self.restart_button.setStyleSheet("""
             QPushButton {
-                background-color: #1565c0;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #8b5cf6,
+                    stop:1 #ec4899
+                );
                 color: white;
-                font-size: 14px;
-                font-weight: bold;
-                border-radius: 5px;
+                font-size: 15px;
+                font-weight: 600;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 24px;
             }
             QPushButton:hover {
-                background-color: #1976d2;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #7c3aed,
+                    stop:1 #db2777
+                );
+            }
+            QPushButton:pressed {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6d28d9,
+                    stop:1 #be185d
+                );
             }
             QPushButton:disabled {
-                background-color: #666;
-                color: #999;
+                background: rgba(71, 85, 105, 0.5);
+                color: #64748b;
             }
         """)
         self.restart_button.clicked.connect(self._on_restart_clicked)
@@ -149,15 +217,21 @@ class BotControlWidget(QWidget):
 
         layout.addWidget(control_group)
 
-        # Restart required indicator
-        self.restart_required_label = QLabel("⚠️  Restart required to apply settings")
+        # Restart required indicator with glass styling
+        self.restart_required_label = QLabel("Restart required to apply settings")
         self.restart_required_label.setStyleSheet("""
             QLabel {
-                background-color: #f57c00;
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #f59e0b,
+                    stop:1 #f97316
+                );
                 color: white;
-                padding: 10px;
-                border-radius: 5px;
-                font-weight: bold;
+                padding: 14px 20px;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 14px;
+                border: 1px solid rgba(251, 146, 60, 0.3);
             }
         """)
         self.restart_required_label.setAlignment(Qt.AlignCenter)
@@ -213,25 +287,29 @@ class BotControlWidget(QWidget):
 
         # Update status label and icon
         if status["status"] == "running":
-            self.status_icon.setText("🟢")
+            self.status_icon.setText("●")
+            self.status_icon.setStyleSheet("color: #10b981;")  # Green
             self.status_label.setText("Running")
             self.start_button.setEnabled(False)
             self.stop_button.setEnabled(True)
             self.restart_button.setEnabled(True)
         elif status["status"] == "starting":
-            self.status_icon.setText("🟡")
+            self.status_icon.setText("●")
+            self.status_icon.setStyleSheet("color: #f59e0b;")  # Yellow
             self.status_label.setText("Starting...")
             self.start_button.setEnabled(False)
             self.stop_button.setEnabled(False)
             self.restart_button.setEnabled(False)
         elif status["status"] == "stopping":
-            self.status_icon.setText("🟡")
+            self.status_icon.setText("●")
+            self.status_icon.setStyleSheet("color: #f59e0b;")  # Yellow
             self.status_label.setText("Stopping...")
             self.start_button.setEnabled(False)
             self.stop_button.setEnabled(False)
             self.restart_button.setEnabled(False)
         else:  # stopped
-            self.status_icon.setText("🔴")
+            self.status_icon.setText("●")
+            self.status_icon.setStyleSheet("color: #ef4444;")  # Red
             self.status_label.setText("Stopped")
             self.start_button.setEnabled(True)
             self.stop_button.setEnabled(False)
