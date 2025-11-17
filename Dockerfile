@@ -1,6 +1,6 @@
 # Multi-stage Docker build for AlphaSnobAI v3.0
 # Stage 1: Builder - Install dependencies
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -27,7 +27,7 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN uv pip install --no-cache -e ".[all]"
 
 # Stage 2: Runtime - Minimal image
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y \
