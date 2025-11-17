@@ -1,18 +1,20 @@
 import logging
 from pathlib import Path
-from typing import Optional
+
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
-ALPHASNOB_THEME = Theme({
-    "info": "cyan",
-    "warning": "yellow",
-    "error": "bold red",
-    "critical": "bold white on red",
-    "success": "bold green",
-    "debug": "dim cyan",
-})
+ALPHASNOB_THEME = Theme(
+    {
+        "info": "cyan",
+        "warning": "yellow",
+        "error": "bold red",
+        "critical": "bold white on red",
+        "success": "bold green",
+        "debug": "dim cyan",
+    },
+)
 
 LOG_ICONS = {
     "DEBUG": "🔍",
@@ -25,14 +27,13 @@ LOG_ICONS = {
 
 
 class RichLogger:
-
     def __init__(
         self,
         name: str = "alphasnob",
         level: str = "INFO",
-        log_file: Optional[Path] = None,
+        log_file: Path | None = None,
         show_time: bool = True,
-        show_path: bool = False
+        show_path: bool = False,
     ):
         """Initialize rich logger.
 
@@ -65,10 +66,10 @@ class RichLogger:
 
         if log_file:
             log_file.parent.mkdir(exist_ok=True, parents=True)
-            file_handler = logging.FileHandler(log_file, encoding='utf-8')
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setLevel(self.level)
             file_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
             file_handler.setFormatter(file_formatter)
             self.logger.addHandler(file_handler)
@@ -97,7 +98,7 @@ class RichLogger:
             f"[success]{self._format_message(message, 'SUCCESS')}[/success]",
             *args,
             extra={"markup": True},
-            **kwargs
+            **kwargs,
         )
 
     def exception(self, message: str, *args, **kwargs):
@@ -106,20 +107,20 @@ class RichLogger:
 
 def setup_rich_logging(
     level: str = "INFO",
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     show_time: bool = True,
-    show_path: bool = False
+    show_path: bool = False,
 ) -> RichLogger:
     return RichLogger(
         name="alphasnob",
         level=level,
         log_file=log_file,
         show_time=show_time,
-        show_path=show_path
+        show_path=show_path,
     )
 
 
-_global_logger: Optional[RichLogger] = None
+_global_logger: RichLogger | None = None
 
 
 def get_logger() -> RichLogger:

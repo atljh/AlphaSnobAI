@@ -4,7 +4,7 @@ This is a domain interface that defines how to interact with user storage.
 Infrastructure layer will provide concrete implementations.
 """
 
-from typing import Optional, Protocol
+from typing import Protocol
 from uuid import UUID
 
 from alphasnob.domain.users.entities.user import User
@@ -33,18 +33,18 @@ class UserRepository(Protocol):
                 ...
     """
 
-    async def get_by_id(self, id: UUID) -> Optional[User]:
+    async def get_by_id(self, entity_id: UUID) -> User | None:
         """Get user by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            entity_id: Internal entity UUID
 
         Returns:
             User if found, None otherwise
         """
         ...
 
-    async def get_by_user_id(self, user_id: UserId) -> Optional[User]:
+    async def get_by_user_id(self, user_id: UserId) -> User | None:
         """Get user by Telegram user ID.
 
         Args:
@@ -92,18 +92,18 @@ class UserProfileRepository(Protocol):
     This is the main repository for user management.
     """
 
-    async def get_by_id(self, id: UUID) -> Optional[UserProfile]:
+    async def get_by_id(self, entity_id: UUID) -> UserProfile | None:
         """Get profile by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            entity_id: Internal entity UUID
 
         Returns:
             UserProfile if found, None otherwise
         """
         ...
 
-    async def get_by_user_id(self, user_id: UserId) -> Optional[UserProfile]:
+    async def get_by_user_id(self, user_id: UserId) -> UserProfile | None:
         """Get profile by Telegram user ID.
 
         Args:
@@ -146,7 +146,9 @@ class UserProfileRepository(Protocol):
         ...
 
     async def find_by_relationship(
-        self, level: RelationshipLevel, limit: int = 100
+        self,
+        level: RelationshipLevel,
+        limit: int = 100,
     ) -> list[UserProfile]:
         """Find profiles by relationship level.
 
@@ -160,7 +162,10 @@ class UserProfileRepository(Protocol):
         ...
 
     async def find_by_trust_score(
-        self, min_score: float, max_score: float, limit: int = 100
+        self,
+        min_score: float,
+        max_score: float,
+        limit: int = 100,
     ) -> list[UserProfile]:
         """Find profiles by trust score range.
 
@@ -174,7 +179,7 @@ class UserProfileRepository(Protocol):
         """
         ...
 
-    async def get_owner(self) -> Optional[UserProfile]:
+    async def get_owner(self) -> UserProfile | None:
         """Get bot owner profile.
 
         Returns:

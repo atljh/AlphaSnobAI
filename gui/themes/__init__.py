@@ -3,19 +3,20 @@
 Provides macOS-style themes with light and dark modes.
 """
 
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
-from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSettings
+from PySide6.QtWidgets import QApplication
 
 
 class Theme(Enum):
     """Available themes."""
-    GLASS_DARK = "glass_dark"      # Modern glassmorphism dark (default)
-    GLASS_LIGHT = "glass_light"    # Modern glassmorphism light
-    MACOS_DARK = "macos_dark"      # Classic macOS dark
-    MACOS_LIGHT = "macos_light"    # Classic macOS light
+
+    GLASS_DARK = "glass_dark"  # Modern glassmorphism dark (default)
+    GLASS_LIGHT = "glass_light"  # Modern glassmorphism light
+    MACOS_DARK = "macos_dark"  # Classic macOS dark
+    MACOS_LIGHT = "macos_light"  # Classic macOS light
 
 
 class ThemeManager:
@@ -53,7 +54,7 @@ class ThemeManager:
         if not qss_file.exists():
             return ""
 
-        with open(qss_file, 'r', encoding='utf-8') as f:
+        with open(qss_file, encoding="utf-8") as f:
             return f.read()
 
     def apply_theme(self, theme: Theme, app: QApplication = None):

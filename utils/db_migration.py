@@ -1,7 +1,7 @@
-import aiosqlite
 import logging
 from pathlib import Path
-from datetime import datetime
+
+import aiosqlite
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +30,19 @@ class DatabaseMigration:
     async def _get_schema_version(self, db: aiosqlite.Connection) -> int:
         try:
             cursor = await db.execute(
-                "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
+                "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1",
             )
             row = await cursor.fetchone()
             return row[0] if row else 0
         except aiosqlite.OperationalError:
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS schema_version (
                     version INTEGER PRIMARY KEY,
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """,
+            )
             return 0
 
     async def _migrate_to_v1(self, db: aiosqlite.Connection):
@@ -49,15 +51,17 @@ class DatabaseMigration:
         cursor = await db.execute("PRAGMA table_info(messages)")
         columns = {row[1] for row in await cursor.fetchall()}
 
-        if 'persona_mode' not in columns:
-            await db.execute("ALTER TABLE messages ADD COLUMN persona_mode TEXT DEFAULT 'alphasnob'")
+        if "persona_mode" not in columns:
+            await db.execute(
+                "ALTER TABLE messages ADD COLUMN persona_mode TEXT DEFAULT 'alphasnob'",
+            )
             logger.info("Added persona_mode column to messages")
 
-        if 'response_delay_ms' not in columns:
+        if "response_delay_ms" not in columns:
             await db.execute("ALTER TABLE messages ADD COLUMN response_delay_ms INTEGER")
             logger.info("Added response_delay_ms column to messages")
 
-        if 'decision_score' not in columns:
+        if "decision_score" not in columns:
             await db.execute("ALTER TABLE messages ADD COLUMN decision_score REAL")
             logger.info("Added decision_score column to messages")
 
@@ -67,7 +71,8 @@ class DatabaseMigration:
     async def _migrate_to_v2(self, db: aiosqlite.Connection):
         logger.info("Applying migration v2: Create new tables")
 
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS user_profiles (
                 user_id INTEGER PRIMARY KEY,
                 username TEXT,
@@ -89,13 +94,19 @@ class DatabaseMigration:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """,
+        )
         logger.info("Created user_profiles table")
 
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_relationship ON user_profiles(relationship_level)")
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_last_interaction ON user_profiles(last_interaction)")
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_relationship ON user_profiles(relationship_level)",
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_last_interaction ON user_profiles(last_interaction)",
+        )
 
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS conversation_topics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 chat_id INTEGER NOT NULL,
@@ -108,12 +119,16 @@ class DatabaseMigration:
 
                 UNIQUE(chat_id, topic)
             )
-        """)
+        """,
+        )
         logger.info("Created conversation_topics table")
 
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_chat_topics ON conversation_topics(chat_id, last_mentioned DESC)")
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_chat_topics ON conversation_topics(chat_id, last_mentioned DESC)",
+        )
 
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS response_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 message_id INTEGER,
@@ -132,10 +147,13 @@ class DatabaseMigration:
 
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """,
+        )
         logger.info("Created response_history table")
 
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_response_chat ON response_history(chat_id, timestamp DESC)")
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_response_chat ON response_history(chat_id, timestamp DESC)",
+        )
 
         await db.execute("INSERT INTO schema_version (version) VALUES (2)")
         logger.info("Migration v2 completed")

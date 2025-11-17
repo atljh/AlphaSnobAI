@@ -6,6 +6,6 @@ from alphasnob.domain.decisions.value_objects.probability import Probability
 
 __all__ = [
     "Decision",
-    "Probability",
     "DecisionFactors",
+    "Probability",
 ]

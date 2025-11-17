@@ -1,11 +1,12 @@
 """Database management utilities."""
 
-import shutil
 import json
-import aiosqlite
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import shutil
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+import aiosqlite
 
 
 class DatabaseManager:
@@ -19,7 +20,7 @@ class DatabaseManager:
         """
         self.db_path = db_path
 
-    async def backup(self, output_path: Optional[Path] = None) -> Path:
+    async def backup(self, output_path: Path | None = None) -> Path:
         """Create database backup.
 
         Args:
@@ -64,7 +65,7 @@ class DatabaseManager:
     async def clean_old_messages(
         self,
         older_than: timedelta,
-        chat_id: Optional[int] = None
+        chat_id: int | None = None,
     ) -> int:
         """Delete old messages.
 
@@ -81,12 +82,12 @@ class DatabaseManager:
             if chat_id:
                 cursor = await db.execute(
                     "DELETE FROM messages WHERE chat_id = ? AND timestamp < ?",
-                    (chat_id, cutoff_date)
+                    (chat_id, cutoff_date),
                 )
             else:
                 cursor = await db.execute(
                     "DELETE FROM messages WHERE timestamp < ?",
-                    (cutoff_date,)
+                    (cutoff_date,),
                 )
 
             deleted = cursor.rowcount
@@ -97,8 +98,8 @@ class DatabaseManager:
     async def export_chat_history(
         self,
         chat_id: int,
-        format: str = 'json',
-        output_path: Optional[Path] = None
+        format: str = "json",
+        output_path: Path | None = None,
     ) -> Path:
         """Export chat history.
 
@@ -123,22 +124,22 @@ class DatabaseManager:
                 WHERE chat_id = ?
                 ORDER BY timestamp ASC
                 """,
-                (chat_id,)
+                (chat_id,),
             )
             messages = await cursor.fetchall()
 
-        if format == 'json':
+        if format == "json":
             data = [dict(msg) for msg in messages]
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False, default=str)
 
-        elif format == 'txt':
-            with open(output_path, 'w', encoding='utf-8') as f:
+        elif format == "txt":
+            with open(output_path, "w", encoding="utf-8") as f:
                 for msg in messages:
-                    timestamp = msg['timestamp']
-                    username = msg['username']
-                    text = msg['text']
-                    persona = f" [{msg['persona_mode']}]" if msg['persona_mode'] else ""
+                    timestamp = msg["timestamp"]
+                    username = msg["username"]
+                    text = msg["text"]
+                    persona = f" [{msg['persona_mode']}]" if msg["persona_mode"] else ""
                     f.write(f"[{timestamp}] {username}{persona}: {text}\n")
 
         return output_path
@@ -149,7 +150,7 @@ class DatabaseManager:
             await db.execute("VACUUM")
             await db.commit()
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get database statistics.
 
         Returns:
@@ -159,25 +160,25 @@ class DatabaseManager:
 
         # File size
         if self.db_path.exists():
-            stats['file_size_mb'] = self.db_path.stat().st_size / (1024 * 1024)
+            stats["file_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
         else:
-            stats['file_size_mb'] = 0
+            stats["file_size_mb"] = 0
 
         async with aiosqlite.connect(self.db_path) as db:
             # Table counts
             cursor = await db.execute("SELECT COUNT(*) FROM messages")
-            stats['messages_count'] = (await cursor.fetchone())[0]
+            stats["messages_count"] = (await cursor.fetchone())[0]
 
             cursor = await db.execute("SELECT COUNT(*) FROM user_profiles")
-            stats['profiles_count'] = (await cursor.fetchone())[0]
+            stats["profiles_count"] = (await cursor.fetchone())[0]
 
             # Oldest and newest message
             cursor = await db.execute(
-                "SELECT MIN(timestamp), MAX(timestamp) FROM messages"
+                "SELECT MIN(timestamp), MAX(timestamp) FROM messages",
             )
             oldest, newest = await cursor.fetchone()
-            stats['oldest_message'] = oldest
-            stats['newest_message'] = newest
+            stats["oldest_message"] = oldest
+            stats["newest_message"] = newest
 
             # Database info
             cursor = await db.execute("PRAGMA page_count")
@@ -186,9 +187,9 @@ class DatabaseManager:
             cursor = await db.execute("PRAGMA page_size")
             page_size = (await cursor.fetchone())[0]
 
-            stats['total_pages'] = page_count
-            stats['page_size'] = page_size
-            stats['db_size_mb'] = (page_count * page_size) / (1024 * 1024)
+            stats["total_pages"] = page_count
+            stats["page_size"] = page_size
+            stats["db_size_mb"] = (page_count * page_size) / (1024 * 1024)
 
         return stats
 
@@ -201,6 +202,7 @@ class DatabaseManager:
         # Import migration module if it exists
         try:
             from utils.db_migration import migrate_database
+
             return await migrate_database(self.db_path)
         except ImportError:
             # No migrations defined
@@ -217,7 +219,7 @@ class DatabaseManager:
             result = (await cursor.fetchone())[0]
             return result == "ok"
 
-    async def get_table_info(self) -> Dict[str, List[Dict[str, Any]]]:
+    async def get_table_info(self) -> dict[str, list[dict[str, Any]]]:
         """Get information about all tables.
 
         Returns:
@@ -226,7 +228,7 @@ class DatabaseManager:
         async with aiosqlite.connect(self.db_path) as db:
             # Get all table names
             cursor = await db.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
+                "SELECT name FROM sqlite_master WHERE type='table'",
             )
             tables = [row[0] for row in await cursor.fetchall()]
 
@@ -253,7 +255,7 @@ class DatabaseManager:
             cursor = await db.execute("SELECT * FROM user_profiles")
             profiles = [dict(row) for row in await cursor.fetchall()]
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(profiles, f, indent=2, ensure_ascii=False, default=str)
 
         return len(profiles)
@@ -267,7 +269,7 @@ class DatabaseManager:
         Returns:
             Number of profiles imported
         """
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, encoding="utf-8") as f:
             profiles = json.load(f)
 
         async with aiosqlite.connect(self.db_path) as db:
@@ -281,19 +283,19 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        profile['user_id'],
-                        profile.get('username'),
-                        profile.get('first_name'),
-                        profile.get('last_name'),
-                        profile.get('relationship_level', 'stranger'),
-                        profile.get('trust_score', 0.0),
-                        profile.get('interaction_count', 0),
-                        profile.get('detected_topics', ''),
-                        profile.get('preferred_persona'),
-                        profile.get('notes'),
-                        profile.get('first_interaction'),
-                        profile.get('last_interaction')
-                    )
+                        profile["user_id"],
+                        profile.get("username"),
+                        profile.get("first_name"),
+                        profile.get("last_name"),
+                        profile.get("relationship_level", "stranger"),
+                        profile.get("trust_score", 0.0),
+                        profile.get("interaction_count", 0),
+                        profile.get("detected_topics", ""),
+                        profile.get("preferred_persona"),
+                        profile.get("notes"),
+                        profile.get("first_interaction"),
+                        profile.get("last_interaction"),
+                    ),
                 )
 
             await db.commit()

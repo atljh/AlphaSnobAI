@@ -1,7 +1,7 @@
 """Message repository interface (port)."""
 
 from datetime import datetime
-from typing import Optional, Protocol
+from typing import Protocol
 from uuid import UUID
 
 from alphasnob.domain.messaging.entities.chat import Chat
@@ -16,18 +16,18 @@ class MessageRepository(Protocol):
     Handles storage and retrieval of messages with various query capabilities.
     """
 
-    async def get_by_id(self, id: UUID) -> Optional[Message]:
+    async def get_by_id(self, entity_id: UUID) -> Message | None:
         """Get message by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            entity_id: Internal entity UUID
 
         Returns:
             Message if found, None otherwise
         """
         ...
 
-    async def get_by_message_id(self, message_id: int, chat_id: ChatId) -> Optional[Message]:
+    async def get_by_message_id(self, message_id: int, chat_id: ChatId) -> Message | None:
         """Get message by Telegram message ID in specific chat.
 
         Args:
@@ -56,7 +56,9 @@ class MessageRepository(Protocol):
         ...
 
     async def find_recent_in_chat(
-        self, chat_id: ChatId, limit: int = 50
+        self,
+        chat_id: ChatId,
+        limit: int = 50,
     ) -> list[Message]:
         """Get recent messages in a chat.
 
@@ -70,7 +72,9 @@ class MessageRepository(Protocol):
         ...
 
     async def find_by_user(
-        self, user_id: UserId, limit: int = 100
+        self,
+        user_id: UserId,
+        limit: int = 100,
     ) -> list[Message]:
         """Get messages from a specific user.
 
@@ -84,7 +88,9 @@ class MessageRepository(Protocol):
         ...
 
     async def find_bot_messages(
-        self, chat_id: ChatId, limit: int = 50
+        self,
+        chat_id: ChatId,
+        limit: int = 50,
     ) -> list[Message]:
         """Get messages sent by bot in a chat.
 
@@ -141,18 +147,18 @@ class MessageRepository(Protocol):
 class ChatRepository(Protocol):
     """Repository interface for chat persistence."""
 
-    async def get_by_id(self, id: UUID) -> Optional[Chat]:
+    async def get_by_id(self, entity_id: UUID) -> Chat | None:
         """Get chat by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            entity_id: Internal entity UUID
 
         Returns:
             Chat if found, None otherwise
         """
         ...
 
-    async def get_by_chat_id(self, chat_id: ChatId) -> Optional[Chat]:
+    async def get_by_chat_id(self, chat_id: ChatId) -> Chat | None:
         """Get chat by Telegram chat ID.
 
         Args:

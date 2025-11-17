@@ -1,5 +1,6 @@
 """Send message command and handler."""
 
+from datetime import UTC, datetime
 from uuid import UUID
 
 from returns.result import Failure, Result, Success
@@ -33,7 +34,7 @@ class SendMessageCommand(Command):
     decision_score: float | None = None
 
 
-class SendMessageCommandHandler(CommandHandler[UUID]):
+class SendMessageCommandHandler(CommandHandler["SendMessageCommand", UUID]):
     """Handler for SendMessageCommand.
 
     Executes the command by:
@@ -58,7 +59,8 @@ class SendMessageCommandHandler(CommandHandler[UUID]):
         self.bot_user_id = bot_user_id
 
     async def handle(
-        self, command: SendMessageCommand
+        self,
+        command: SendMessageCommand,
     ) -> Result[UUID, Exception]:
         """Handle send message command.
 
@@ -75,7 +77,7 @@ class SendMessageCommandHandler(CommandHandler[UUID]):
                 chat_id=ChatId(command.chat_id),
                 user_id=self.bot_user_id,
                 content=MessageContent(command.text),
-                timestamp=datetime.now(),
+                timestamp=datetime.now(UTC),
                 is_from_bot=True,
                 persona_mode=command.persona_mode,
                 decision_score=command.decision_score,
@@ -89,9 +91,5 @@ class SendMessageCommandHandler(CommandHandler[UUID]):
 
         except DomainError as e:
             return Failure(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return Failure(e)
-
-
-# Need datetime import
-from datetime import datetime

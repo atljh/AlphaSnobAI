@@ -1,6 +1,6 @@
 """Persona entity - bot personality and behavior configuration."""
 
-from typing import Optional
+from dataclasses import field
 
 from alphasnob.domain.shared.base_entity import Entity
 
@@ -33,9 +33,9 @@ class Persona(Entity):
     name: str
     display_name: str
     system_prompt: str
-    traits: list[str] = []
-    examples: list[str] = []
-    temperature_override: Optional[float] = None
+    traits: list[str] = field(default_factory=list)
+    examples: list[str] = field(default_factory=list)
+    temperature_override: float | None = None
     is_active: bool = True
 
     def has_examples(self) -> bool:

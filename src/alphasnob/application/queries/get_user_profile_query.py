@@ -19,7 +19,7 @@ class GetUserProfileQuery(Query):
     user_id: int
 
 
-class GetUserProfileQueryHandler(QueryHandler[UserProfileDTO]):
+class GetUserProfileQueryHandler(QueryHandler["GetUserProfileQuery", UserProfileDTO]):
     """Handler for GetUserProfileQuery."""
 
     def __init__(self, user_profile_repository: UserProfileRepository):
@@ -31,7 +31,8 @@ class GetUserProfileQueryHandler(QueryHandler[UserProfileDTO]):
         self.user_profile_repository = user_profile_repository
 
     async def handle(
-        self, query: GetUserProfileQuery
+        self,
+        query: GetUserProfileQuery,
     ) -> Result[UserProfileDTO, Exception]:
         """Handle get user profile query.
 
@@ -44,14 +45,15 @@ class GetUserProfileQueryHandler(QueryHandler[UserProfileDTO]):
         try:
             # Get profile from repository
             profile = await self.user_profile_repository.get_by_user_id(
-                user_id=UserId(query.user_id)
+                user_id=UserId(query.user_id),
             )
 
             if profile is None:
                 return Failure(
                     EntityNotFoundError(
-                        "User profile not found", user_id=query.user_id
-                    )
+                        "User profile not found",
+                        user_id=query.user_id,
+                    ),
                 )
 
             # Convert to DTO
@@ -77,5 +79,5 @@ class GetUserProfileQueryHandler(QueryHandler[UserProfileDTO]):
 
         except DomainError as e:
             return Failure(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return Failure(e)

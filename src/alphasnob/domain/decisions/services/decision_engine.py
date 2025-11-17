@@ -5,7 +5,6 @@ naturally belong to any single entity.
 """
 
 import random
-from typing import Optional
 
 from alphasnob.domain.decisions.entities.decision import Decision
 from alphasnob.domain.decisions.value_objects.decision_factors import DecisionFactors
@@ -49,7 +48,8 @@ class DecisionEngine:
         self,
         message: Message,
         user_profile: UserProfile,
-        bot_username: Optional[str] = None,
+        *,
+        bot_username: str | None = None,
         cooldown_active: bool = False,
     ) -> Decision:
         """Make decision on whether to respond to message.
@@ -107,7 +107,8 @@ class DecisionEngine:
         self,
         message: Message,
         user_profile: UserProfile,
-        bot_username: Optional[str],
+        *,
+        bot_username: str | None,
         cooldown_active: bool,
     ) -> DecisionFactors:
         """Build decision factors from message and user profile.
@@ -172,7 +173,7 @@ class DecisionEngine:
         Returns:
             True or False based on random roll
         """
-        return random.random() < probability.value
+        return random.random() < probability.value  # noqa: S311 # nosec B311
 
     def _select_persona(self, user_profile: UserProfile) -> str:
         """Select persona mode for response.
@@ -200,7 +201,7 @@ class DecisionEngine:
         Returns:
             Random delay between 1000-5000ms
         """
-        return random.randint(1000, 5000)
+        return random.randint(1000, 5000)  # noqa: S311 # nosec B311
 
     def _explain_forced_response(self, factors: DecisionFactors) -> str:
         """Explain why response is forced.
@@ -215,7 +216,7 @@ class DecisionEngine:
 
         if factors.is_private_chat:
             reasons.append("private chat")
-        if factors.mention_multiplier > 1.5:
+        if factors.mention_multiplier > 1.5:  # noqa: PLR2004
             reasons.append("directly mentioned")
         if factors.is_reply_to_bot:
             reasons.append("reply to bot")
@@ -238,7 +239,9 @@ class DecisionEngine:
         return "Blocked: unknown reason"
 
     def _explain_probability_decision(
-        self, factors: DecisionFactors, probability: Probability
+        self,
+        factors: DecisionFactors,
+        probability: Probability,
     ) -> str:
         """Explain probability-based decision.
 

@@ -4,25 +4,27 @@ Provides comprehensive visualization of bot activity including message stats,
 response rates, persona usage, and decision engine metrics.
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-    QPushButton, QLabel, QMessageBox, QScrollArea,
-    QGroupBox, QGridLayout, QDateEdit, QComboBox
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, QDate
-from PySide6.QtGui import QFont
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.stats_collector import StatsCollector
 from config.settings import get_settings
+from utils.stats_collector import StatsCollector
 
 
 class MetricCard(QWidget):
@@ -38,25 +40,29 @@ class MetricCard(QWidget):
 
         # Value
         value_label = QLabel(value)
-        value_label.setStyleSheet(f"""
+        value_label.setStyleSheet(
+            f"""
             QLabel {{
                 font-size: 32px;
                 font-weight: 700;
                 color: {color};
             }}
-        """)
+        """,
+        )
         value_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(value_label)
 
         # Title
         title_label = QLabel(title)
-        title_label.setStyleSheet("""
+        title_label.setStyleSheet(
+            """
             QLabel {
                 font-size: 13px;
                 color: #cbd5e1;
                 font-weight: 600;
             }
-        """)
+        """,
+        )
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
 
@@ -113,13 +119,15 @@ class StatisticsWidget(QWidget):
 
         # Title
         title = QLabel("Statistics & Analytics")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 24px;
                 font-weight: 700;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         header_layout.addWidget(title)
 
         header_layout.addStretch()
@@ -128,7 +136,8 @@ class StatisticsWidget(QWidget):
         refresh_btn = QPushButton("Refresh Data")
         refresh_btn.setMinimumHeight(36)
         refresh_btn.setCursor(Qt.PointingHandCursor)
-        refresh_btn.setStyleSheet("""
+        refresh_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -149,7 +158,8 @@ class StatisticsWidget(QWidget):
                     stop:1 #7c3aed
                 );
             }
-        """)
+        """,
+        )
         refresh_btn.clicked.connect(self._load_stats)
         header_layout.addWidget(refresh_btn)
 
@@ -203,13 +213,15 @@ class StatisticsWidget(QWidget):
         info_layout.setContentsMargins(24, 20, 24, 20)
 
         info_title = QLabel("Activity Charts")
-        info_title.setStyleSheet("""
+        info_title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         info_layout.addWidget(info_title)
 
         info_desc = QLabel(
@@ -219,7 +231,7 @@ class StatisticsWidget(QWidget):
             "• Response rate over time\n"
             "• Messages by hour of day\n"
             "• Messages by day of week\n\n"
-            "Note: Matplotlib integration for charts is coming soon."
+            "Note: Matplotlib integration for charts is coming soon.",
         )
         info_desc.setWordWrap(True)
         info_desc.setStyleSheet("color: #cbd5e1; font-size: 14px; line-height: 1.6;")
@@ -245,14 +257,16 @@ class StatisticsWidget(QWidget):
         stats_layout.setSpacing(12)
 
         title = QLabel("Persona Usage Statistics")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 12px;
             }
-        """)
+        """,
+        )
         stats_layout.addWidget(title)
 
         self.persona_stats_label = QLabel("Loading...")
@@ -287,25 +301,29 @@ class StatisticsWidget(QWidget):
         chats_layout.setSpacing(12)
 
         title = QLabel("Top 10 Most Active Chats")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 12px;
             }
-        """)
+        """,
+        )
         chats_layout.addWidget(title)
 
         self.top_chats_label = QLabel("Loading...")
         self.top_chats_label.setWordWrap(True)
-        self.top_chats_label.setStyleSheet("""
+        self.top_chats_label.setStyleSheet(
+            """
             QLabel {
                 color: #cbd5e1;
                 font-size: 14px;
                 font-family: 'JetBrains Mono', monospace;
             }
-        """)
+        """,
+        )
         chats_layout.addWidget(self.top_chats_label)
 
         layout.addWidget(chats_card)
@@ -328,25 +346,29 @@ class StatisticsWidget(QWidget):
         users_layout.setSpacing(12)
 
         title = QLabel("Top 10 Most Active Users")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 12px;
             }
-        """)
+        """,
+        )
         users_layout.addWidget(title)
 
         self.top_users_label = QLabel("Loading...")
         self.top_users_label.setWordWrap(True)
-        self.top_users_label.setStyleSheet("""
+        self.top_users_label.setStyleSheet(
+            """
             QLabel {
                 color: #cbd5e1;
                 font-size: 14px;
                 font-family: 'JetBrains Mono', monospace;
             }
-        """)
+        """,
+        )
         users_layout.addWidget(self.top_users_label)
 
         layout.addWidget(users_card)
@@ -369,14 +391,16 @@ class StatisticsWidget(QWidget):
         decisions_layout.setSpacing(12)
 
         title = QLabel("Decision Engine Statistics")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 12px;
             }
-        """)
+        """,
+        )
         decisions_layout.addWidget(title)
 
         self.decision_stats_label = QLabel("Loading...")
@@ -411,7 +435,9 @@ class StatisticsWidget(QWidget):
             self.messages_today_card.findChild(QLabel).setText(str(stats.messages_today))
 
             if stats.avg_decision_score is not None:
-                self.avg_decision_score_card.findChild(QLabel).setText(f"{stats.avg_decision_score:.2f}")
+                self.avg_decision_score_card.findChild(QLabel).setText(
+                    f"{stats.avg_decision_score:.2f}",
+                )
             else:
                 self.avg_decision_score_card.findChild(QLabel).setText("--")
 

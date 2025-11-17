@@ -1,27 +1,24 @@
 #!/usr/bin/env python3
+import subprocess  # nosec B404
 import sys
-import time
-import subprocess
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.prompt import Confirm
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.settings import get_settings
 from bot.daemon import DaemonManager
+from config.settings import get_settings
 from utils.ui import (
-    print_banner,
-    create_status_panel,
     create_config_panel,
-    show_success,
-    show_error,
-    show_warning,
-    show_info,
+    create_status_panel,
     format_uptime,
+    print_banner,
+    show_error,
+    show_info,
+    show_success,
+    show_warning,
 )
 
 app = typer.Typer(help="AlphaSnobAI - Telegram UserBot CLI")
@@ -39,8 +36,18 @@ def get_daemon_manager() -> DaemonManager:
 
 @app.command()
 def start(
-    foreground: bool = typer.Option(False, "--foreground", "-f", help="Run in foreground (don't daemonize)"),
-    interactive: bool = typer.Option(False, "--interactive", "-i", help="Run in interactive mode with live UI")
+    foreground: bool = typer.Option(
+        False,
+        "--foreground",
+        "-f",
+        help="Run in foreground (don't daemonize)",
+    ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Run in interactive mode with live UI",
+    ),
 ):
     print_banner()
 
@@ -57,20 +64,21 @@ def start(
     try:
         if interactive:
             show_info("Starting in interactive mode...")
-            subprocess.run([sys.executable, "bot/runner.py"], check=True)
+            subprocess.run([sys.executable, "bot/runner.py"], check=True)  # nosec B603
         elif foreground:
             show_info("Running in foreground mode (Ctrl+C to stop)")
-            subprocess.run([sys.executable, "main.py"], check=True)
+            subprocess.run([sys.executable, "main.py"], check=True)  # nosec B603
         else:
             pid = daemon.start()
 
             if pid > 0:
-                show_success(f"Bot started successfully!")
+                show_success("Bot started successfully!")
                 show_info(f"PID: {pid}")
-                show_info(f"Status: python cli.py status")
-                show_info(f"Logs: python cli.py logs")
+                show_info("Status: python cli.py status")
+                show_info("Logs: python cli.py logs")
             else:
                 import main
+
                 main.main()
 
     except Exception as e:
@@ -80,7 +88,12 @@ def start(
 
 @app.command()
 def stop(
-    force: bool = typer.Option(False, "--force", "-f", help="Force kill if graceful shutdown fails")
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force kill if graceful shutdown fails",
+    ),
 ):
     daemon = get_daemon_manager()
 
@@ -113,10 +126,11 @@ def restart():
         pid = daemon.restart(timeout=10)
 
         if pid > 0:
-            show_success(f"Bot restarted successfully!")
+            show_success("Bot restarted successfully!")
             show_info(f"New PID: {pid}")
         else:
             import main
+
             main.main()
 
     except Exception as e:
@@ -129,16 +143,16 @@ def status():
     daemon = get_daemon_manager()
     status_info = daemon.get_status()
 
-    if status_info['running']:
-        uptime_str = format_uptime(int(status_info['uptime'].total_seconds()))
+    if status_info["running"]:
+        uptime_str = format_uptime(int(status_info["uptime"].total_seconds()))
 
         panel = create_status_panel(
             status="running",
-            pid=status_info['pid'],
-            uptime=status_info['uptime'],
+            pid=status_info["pid"],
+            uptime=status_info["uptime"],
             messages_processed=0,  # TODO: Get from stats
             responses_sent=0,  # TODO: Get from stats
-            last_activity="N/A"  # TODO: Get from stats
+            last_activity="N/A",  # TODO: Get from stats
         )
         console.print(panel)
 
@@ -153,7 +167,7 @@ def status():
 @app.command()
 def logs(
     follow: bool = typer.Option(False, "--follow", "-f", help="Follow log output"),
-    lines: int = typer.Option(50, "--lines", "-n", help="Number of lines to show")
+    lines: int = typer.Option(50, "--lines", "-n", help="Number of lines to show"),
 ):
     try:
         settings = get_settings()
@@ -165,18 +179,19 @@ def logs(
 
         if follow:
             show_info(f"Following logs from {log_file} (Ctrl+C to stop)")
-            subprocess.run(["tail", "-f", str(log_file)])
+            subprocess.run(["tail", "-f", str(log_file)], check=False)  # nosec B603, B607
         else:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["tail", "-n", str(lines), str(log_file)],
+                check=False,
                 capture_output=True,
-                text=True
+                text=True,
             )
             console.print(result.stdout)
 
     except FileNotFoundError:
         show_error("'tail' command not found. Reading file directly...")
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             lines_list = f.readlines()
             for line in lines_list[-lines:]:
                 console.print(line.rstrip())
@@ -187,7 +202,7 @@ def logs(
 
 @app.command(name="config")
 def config_cmd(
-    action: str = typer.Argument("show", help="Action: show or validate")
+    action: str = typer.Argument("show", help="Action: show or validate"),
 ):
     try:
         settings = get_settings()
@@ -224,7 +239,7 @@ def config_cmd(
 
 @app.command()
 def stats(
-    chat_id: Optional[int] = typer.Argument(None, help="Chat ID to show stats for")
+    chat_id: int | None = typer.Argument(None, help="Chat ID to show stats for"),
 ):
     # TODO: Implement statistics retrieval from database
     show_warning("Statistics feature coming soon!")

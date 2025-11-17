@@ -1,7 +1,5 @@
 """Decision entity - result of decision-making process."""
 
-from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from alphasnob.domain.decisions.value_objects.decision_factors import DecisionFactors
@@ -42,8 +40,8 @@ class Decision(Entity):
     probability: Probability
     factors: DecisionFactors
     reasoning: str
-    persona_mode: Optional[str] = None
-    estimated_delay_ms: Optional[int] = None
+    persona_mode: str | None = None
+    estimated_delay_ms: int | None = None
 
     def get_summary(self) -> str:
         """Get summary of decision.

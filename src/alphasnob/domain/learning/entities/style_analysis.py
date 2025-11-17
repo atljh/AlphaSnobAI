@@ -1,7 +1,7 @@
 """Style analysis entity (aggregate root)."""
 
-from datetime import datetime
-from typing import Optional
+from dataclasses import field
+from datetime import UTC, datetime
 
 from alphasnob.domain.learning.value_objects.formality_score import FormalityScore
 from alphasnob.domain.shared.base_entity import Entity
@@ -44,19 +44,19 @@ class StyleAnalysis(Entity):
     avg_sentence_length: float
     formality_score: FormalityScore
     emoji_frequency: float
-    common_words: list[str] = []
-    common_phrases: list[str] = []
-    language_distribution: dict[str, float] = {}
+    common_words: list[str] = field(default_factory=list)
+    common_phrases: list[str] = field(default_factory=list)
+    language_distribution: dict[str, float] = field(default_factory=dict)
     analyzed_at: datetime
 
-    def __init__(self, **kwargs):  # type: ignore
+    def __init__(self, **kwargs: object) -> None:
         """Initialize style analysis.
 
         Args:
             **kwargs: Analysis fields
         """
-        analyzed_at = kwargs.pop("analyzed_at", datetime.now())
-        super().__init__(analyzed_at=analyzed_at, **kwargs)
+        analyzed_at = kwargs.pop("analyzed_at", datetime.now(UTC))
+        super().__init__(analyzed_at=analyzed_at, **kwargs)  # type: ignore[call-arg, arg-type]
 
     def is_sufficient(self, min_samples: int = 50) -> bool:
         """Check if analysis has sufficient samples.
@@ -69,7 +69,7 @@ class StyleAnalysis(Entity):
         """
         return self.sample_count >= min_samples
 
-    def get_primary_language(self) -> Optional[str]:
+    def get_primary_language(self) -> str | None:
         """Get primary language (most common).
 
         Returns:

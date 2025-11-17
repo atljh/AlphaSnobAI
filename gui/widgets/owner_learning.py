@@ -6,23 +6,27 @@ and testing the learned writing style.
 
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-    QPushButton, QLabel, QMessageBox, QTextEdit,
-    QLineEdit, QGroupBox, QFormLayout, QListWidget,
-    QListWidgetItem, QScrollArea, QProgressDialog
-)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from services.owner_learning import OwnerLearningSystem
-from services.owner_collector import OwnerMessageCollector
 from config.settings import get_settings
+from services.owner_collector import OwnerMessageCollector
+from services.owner_learning import OwnerLearningSystem
 
 
 class OwnerLearningWidget(QWidget):
@@ -34,10 +38,10 @@ class OwnerLearningWidget(QWidget):
         # Initialize systems
         self.settings = get_settings()
         self.owner_learning = OwnerLearningSystem(
-            manual_samples_path=self.settings.owner_learning.manual_samples_path
+            manual_samples_path=self.settings.owner_learning.manual_samples_path,
         )
         self.owner_collector = OwnerMessageCollector(
-            config=self.settings.owner_learning
+            config=self.settings.owner_learning,
         )
 
         # Create UI
@@ -81,26 +85,30 @@ class OwnerLearningWidget(QWidget):
         title_row = QHBoxLayout()
 
         title = QLabel("Owner Learning")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 24px;
                 font-weight: 700;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         title_row.addWidget(title)
 
         title_row.addStretch()
 
         # Status indicator
         self.status_indicator = QLabel("● Enabled")
-        self.status_indicator.setStyleSheet("""
+        self.status_indicator.setStyleSheet(
+            """
             QLabel {
                 font-size: 14px;
                 font-weight: 600;
                 color: #10b981;
             }
-        """)
+        """,
+        )
         title_row.addWidget(self.status_indicator)
 
         header_layout.addLayout(title_row)
@@ -152,7 +160,8 @@ class OwnerLearningWidget(QWidget):
         save_ids_btn = QPushButton("Save Owner IDs")
         save_ids_btn.setMinimumHeight(40)
         save_ids_btn.setCursor(Qt.PointingHandCursor)
-        save_ids_btn.setStyleSheet("""
+        save_ids_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -173,7 +182,8 @@ class OwnerLearningWidget(QWidget):
                     stop:1 #7c3aed
                 );
             }
-        """)
+        """,
+        )
         save_ids_btn.clicked.connect(self._on_save_owner_ids)
         ids_layout.addWidget(save_ids_btn)
 
@@ -189,8 +199,9 @@ class OwnerLearningWidget(QWidget):
         toggle_auto_btn = self._create_action_button(
             "Toggle Auto-Collection",
             "Enable/disable automatic collection of owner messages",
-            "#10b981", "#06b6d4",
-            self._on_toggle_auto_collect
+            "#10b981",
+            "#06b6d4",
+            self._on_toggle_auto_collect,
         )
         actions_layout.addWidget(toggle_auto_btn)
 
@@ -198,8 +209,9 @@ class OwnerLearningWidget(QWidget):
         analyze_btn = self._create_action_button(
             "Re-Analyze Style",
             "Analyze writing style from current samples",
-            "#6366f1", "#8b5cf6",
-            self._on_analyze_style
+            "#6366f1",
+            "#8b5cf6",
+            self._on_analyze_style,
         )
         actions_layout.addWidget(analyze_btn)
 
@@ -207,8 +219,9 @@ class OwnerLearningWidget(QWidget):
         merge_btn = self._create_action_button(
             "Merge Auto with Manual",
             "Merge auto-collected messages into manual samples",
-            "#f59e0b", "#f97316",
-            self._on_merge_collections
+            "#f59e0b",
+            "#f97316",
+            self._on_merge_collections,
         )
         actions_layout.addWidget(merge_btn)
 
@@ -226,8 +239,7 @@ class OwnerLearningWidget(QWidget):
 
         # Info
         info = QLabel(
-            "Edit manual samples of owner's messages. "
-            "Each message should be on a separate line."
+            "Edit manual samples of owner's messages. Each message should be on a separate line.",
         )
         info.setWordWrap(True)
         info.setStyleSheet("color: #cbd5e1; font-size: 14px;")
@@ -251,7 +263,8 @@ class OwnerLearningWidget(QWidget):
         save_btn = QPushButton("Save Manual Samples")
         save_btn.setMinimumHeight(40)
         save_btn.setCursor(Qt.PointingHandCursor)
-        save_btn.setStyleSheet("""
+        save_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -272,7 +285,8 @@ class OwnerLearningWidget(QWidget):
                     stop:1 #0891b2
                 );
             }
-        """)
+        """,
+        )
         save_btn.clicked.connect(self._on_save_manual_samples)
         bottom_row.addWidget(save_btn)
 
@@ -297,14 +311,16 @@ class OwnerLearningWidget(QWidget):
         stats_layout.setContentsMargins(24, 20, 24, 20)
 
         stats_title = QLabel("Collection Statistics")
-        stats_title.setStyleSheet("""
+        stats_title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 12px;
             }
-        """)
+        """,
+        )
         stats_layout.addWidget(stats_title)
 
         self.collection_stats_label = QLabel("Loading...")
@@ -320,7 +336,8 @@ class OwnerLearningWidget(QWidget):
         clear_btn = QPushButton("Clear Collection")
         clear_btn.setMinimumHeight(40)
         clear_btn.setCursor(Qt.PointingHandCursor)
-        clear_btn.setStyleSheet("""
+        clear_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -341,7 +358,8 @@ class OwnerLearningWidget(QWidget):
                     stop:1 #d97706
                 );
             }
-        """)
+        """,
+        )
         clear_btn.clicked.connect(self._on_clear_collection)
         actions_row.addWidget(clear_btn)
 
@@ -367,13 +385,15 @@ class OwnerLearningWidget(QWidget):
         analysis_layout.setSpacing(16)
 
         title = QLabel("Writing Style Analysis")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 20px;
                 font-weight: 600;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         analysis_layout.addWidget(title)
 
         self.style_analysis_text = QTextEdit()
@@ -399,14 +419,17 @@ class OwnerLearningWidget(QWidget):
         input_layout = QVBoxLayout(input_group)
 
         self.test_prompt_input = QTextEdit()
-        self.test_prompt_input.setPlaceholderText("Enter a test prompt to see how bot would respond in owner's style...")
+        self.test_prompt_input.setPlaceholderText(
+            "Enter a test prompt to see how bot would respond in owner's style...",
+        )
         self.test_prompt_input.setMaximumHeight(100)
         input_layout.addWidget(self.test_prompt_input)
 
         test_btn = QPushButton("Generate Response")
         test_btn.setMinimumHeight(40)
         test_btn.setCursor(Qt.PointingHandCursor)
-        test_btn.setStyleSheet("""
+        test_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -427,7 +450,8 @@ class OwnerLearningWidget(QWidget):
                     stop:1 #db2777
                 );
             }
-        """)
+        """,
+        )
         test_btn.clicked.connect(self._on_test_style)
         input_layout.addWidget(test_btn)
 
@@ -448,8 +472,14 @@ class OwnerLearningWidget(QWidget):
 
         return widget
 
-    def _create_action_button(self, title: str, description: str,
-                             color1: str, color2: str, callback) -> QWidget:
+    def _create_action_button(
+        self,
+        title: str,
+        description: str,
+        color1: str,
+        color2: str,
+        callback,
+    ) -> QWidget:
         """Create a styled action button."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
@@ -459,7 +489,8 @@ class OwnerLearningWidget(QWidget):
         button = QPushButton(title)
         button.setMinimumHeight(44)
         button.setCursor(Qt.PointingHandCursor)
-        button.setStyleSheet(f"""
+        button.setStyleSheet(
+            f"""
             QPushButton {{
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -477,7 +508,8 @@ class OwnerLearningWidget(QWidget):
             QPushButton:hover {{
                 opacity: 0.9;
             }}
-        """)
+        """,
+        )
         button.clicked.connect(callback)
 
         desc_label = QLabel(description)
@@ -494,10 +526,14 @@ class OwnerLearningWidget(QWidget):
         # Update status
         if self.settings.owner_learning.enabled:
             self.status_indicator.setText("● Enabled")
-            self.status_indicator.setStyleSheet("QLabel { color: #10b981; font-size: 14px; font-weight: 600; }")
+            self.status_indicator.setStyleSheet(
+                "QLabel { color: #10b981; font-size: 14px; font-weight: 600; }",
+            )
         else:
             self.status_indicator.setText("● Disabled")
-            self.status_indicator.setStyleSheet("QLabel { color: #ef4444; font-size: 14px; font-weight: 600; }")
+            self.status_indicator.setStyleSheet(
+                "QLabel { color: #ef4444; font-size: 14px; font-weight: 600; }",
+            )
 
         # Update samples count
         samples = self.owner_learning._load_samples()
@@ -533,7 +569,7 @@ class OwnerLearningWidget(QWidget):
         try:
             samples_path = Path(self.settings.owner_learning.manual_samples_path)
             if samples_path.exists():
-                with open(samples_path, 'r', encoding='utf-8') as f:
+                with open(samples_path, encoding="utf-8") as f:
                     content = f.read()
                 self.manual_samples_editor.setPlainText(content)
             else:
@@ -547,7 +583,7 @@ class OwnerLearningWidget(QWidget):
             stats = self.owner_collector.get_collection_stats()
             text = f"Total collected: {stats['total_collected']}\n"
             text += f"Unique messages: {stats['unique_messages']}\n"
-            if stats['last_collected']:
+            if stats["last_collected"]:
                 text += f"Last collected: {stats['last_collected']}\n"
             else:
                 text += "Last collected: Never\n"
@@ -566,14 +602,14 @@ class OwnerLearningWidget(QWidget):
                     f"Insufficient samples for analysis.\n\n"
                     f"Current: {current_count}\n"
                     f"Required: {self.settings.owner_learning.min_samples}\n\n"
-                    f"Add more samples to enable style analysis."
+                    f"Add more samples to enable style analysis.",
                 )
                 return
 
             analysis = self.owner_learning.get_analysis()
 
             # Format analysis
-            text = f"=== Writing Style Analysis ===\n\n"
+            text = "=== Writing Style Analysis ===\n\n"
             text += f"Total messages: {analysis.total_messages}\n"
             text += f"Avg message length: {analysis.avg_message_length:.1f} characters\n"
             text += f"Avg sentence length: {analysis.avg_sentence_length:.1f} words\n"
@@ -586,20 +622,24 @@ class OwnerLearningWidget(QWidget):
                 text += f"Common words: {', '.join(f'{w}({c})' for w, c in analysis.common_words[:20])}\n\n"
 
             if analysis.common_phrases:
-                text += f"Common phrases:\n"
+                text += "Common phrases:\n"
                 for phrase, count in analysis.common_phrases[:10]:
                     text += f"  • '{phrase}' ({count})\n"
                 text += "\n"
 
-            text += f"Punctuation patterns:\n"
-            for pattern, count in sorted(analysis.punctuation_patterns.items(), key=lambda x: x[1], reverse=True):
+            text += "Punctuation patterns:\n"
+            for pattern, count in sorted(
+                analysis.punctuation_patterns.items(),
+                key=lambda x: x[1],
+                reverse=True,
+            ):
                 text += f"  • {pattern}: {count}\n"
             text += "\n"
 
             text += f"Formality score: {analysis.formality_score:.2f} (0=casual, 1=formal)\n\n"
 
             if analysis.language_distribution:
-                text += f"Languages:\n"
+                text += "Languages:\n"
                 for lang, pct in analysis.language_distribution.items():
                     text += f"  • {lang}: {pct:.1f}%\n"
 
@@ -611,7 +651,7 @@ class OwnerLearningWidget(QWidget):
     def _update_manual_samples_stats(self):
         """Update manual samples statistics."""
         text = self.manual_samples_editor.toPlainText()
-        lines = len(text.split('\n'))
+        lines = len(text.split("\n"))
         chars = len(text)
         self.manual_samples_stats.setText(f"Lines: {lines}, Characters: {chars}")
 
@@ -620,7 +660,7 @@ class OwnerLearningWidget(QWidget):
         try:
             text = self.owner_ids_input.toPlainText().strip()
             if text:
-                ids = [int(line.strip()) for line in text.split('\n') if line.strip()]
+                ids = [int(line.strip()) for line in text.split("\n") if line.strip()]
             else:
                 ids = []
 
@@ -628,7 +668,7 @@ class OwnerLearningWidget(QWidget):
             QMessageBox.information(
                 self,
                 "Save Owner IDs",
-                f"Owner IDs saved: {ids}\n\nNote: Restart bot for changes to take effect."
+                f"Owner IDs saved: {ids}\n\nNote: Restart bot for changes to take effect.",
             )
 
         except Exception as e:
@@ -640,7 +680,7 @@ class OwnerLearningWidget(QWidget):
             samples_path = Path(self.settings.owner_learning.manual_samples_path)
             samples_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(samples_path, 'w', encoding='utf-8') as f:
+            with open(samples_path, "w", encoding="utf-8") as f:
                 f.write(self.manual_samples_editor.toPlainText())
 
             QMessageBox.information(self, "Success", "Manual samples saved successfully!")
@@ -654,7 +694,7 @@ class OwnerLearningWidget(QWidget):
         QMessageBox.information(
             self,
             "Toggle Auto-Collect",
-            "Auto-collection toggle will be implemented in settings integration."
+            "Auto-collection toggle will be implemented in settings integration.",
         )
 
     def _on_analyze_style(self):
@@ -662,7 +702,7 @@ class OwnerLearningWidget(QWidget):
         try:
             # Force reload
             self.owner_learning = OwnerLearningSystem(
-                manual_samples_path=self.settings.owner_learning.manual_samples_path
+                manual_samples_path=self.settings.owner_learning.manual_samples_path,
             )
             self._load_style_analysis()
             QMessageBox.information(self, "Success", "Style re-analyzed successfully!")
@@ -679,7 +719,7 @@ class OwnerLearningWidget(QWidget):
                 "Merge auto-collected messages into manual samples?\n\n"
                 "This will append all collected messages to your manual samples file.",
                 QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.No,
             )
 
             if reply == QMessageBox.Yes:
@@ -698,7 +738,7 @@ class OwnerLearningWidget(QWidget):
                 "Confirm Clear",
                 "Clear all auto-collected messages?\n\nThis action cannot be undone.",
                 QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.No,
             )
 
             if reply == QMessageBox.Yes:
@@ -722,7 +762,7 @@ class OwnerLearningWidget(QWidget):
             instructions = self.owner_learning.generate_style_instructions()
             self.test_output.setPlainText(
                 f"Style instructions that would be used:\n\n{instructions}\n\n"
-                f"Note: Full LLM integration for testing will be implemented."
+                f"Note: Full LLM integration for testing will be implemented.",
             )
         except Exception as e:
             self.test_output.setPlainText(f"Error: {e}")

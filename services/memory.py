@@ -1,8 +1,8 @@
-import aiosqlite
-from pathlib import Path
-from typing import List, Dict, Optional
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import aiosqlite
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,15 @@ class Message:
         else:
             self.timestamp = datetime.now()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "chat_id": self.chat_id,
             "user_id": self.user_id,
             "username": self.username,
             "text": self.text,
-            "timestamp": self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp
+            "timestamp": self.timestamp.isoformat()
+            if isinstance(self.timestamp, datetime)
+            else self.timestamp,
         }
 
     def __repr__(self):
@@ -50,7 +52,8 @@ class Memory:
             return
 
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     chat_id INTEGER NOT NULL,
@@ -60,17 +63,22 @@ class Memory:
                     timestamp TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """,
+            )
 
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_chat_timestamp
                 ON messages(chat_id, timestamp DESC)
-            """)
+            """,
+            )
 
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_chat_id
                 ON messages(chat_id)
-            """)
+            """,
+            )
 
             await db.commit()
 
@@ -83,12 +91,12 @@ class Memory:
         self,
         chat_id: int,
         user_id: int,
-        username: Optional[str],
+        username: str | None,
         text: str,
-        timestamp: Optional[datetime] = None,
-        persona_mode: Optional[str] = None,
-        response_delay_ms: Optional[int] = None,
-        decision_score: Optional[float] = None
+        timestamp: datetime | None = None,
+        persona_mode: str | None = None,
+        response_delay_ms: int | None = None,
+        decision_score: float | None = None,
     ):
         """Add a message to memory.
 
@@ -119,8 +127,16 @@ class Memory:
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (chat_id, user_id, username or "Unknown", text, timestamp_str,
-                 persona_mode, response_delay_ms, decision_score)
+                (
+                    chat_id,
+                    user_id,
+                    username or "Unknown",
+                    text,
+                    timestamp_str,
+                    persona_mode,
+                    response_delay_ms,
+                    decision_score,
+                ),
             )
             await db.commit()
 
@@ -129,8 +145,8 @@ class Memory:
     async def get_context(
         self,
         chat_id: int,
-        limit: int = 50
-    ) -> List[Message]:
+        limit: int = 50,
+    ) -> list[Message]:
         """Get recent messages from a chat for context.
 
         Args:
@@ -154,7 +170,7 @@ class Memory:
                 ORDER BY timestamp DESC
                 LIMIT ?
                 """,
-                (chat_id, limit)
+                (chat_id, limit),
             ) as cursor:
                 rows = await cursor.fetchall()
 
@@ -164,7 +180,7 @@ class Memory:
                 user_id=row["user_id"],
                 username=row["username"],
                 text=row["text"],
-                timestamp=row["timestamp"]
+                timestamp=row["timestamp"],
             )
             for row in reversed(rows)
         ]
@@ -176,7 +192,7 @@ class Memory:
         self,
         chat_id: int,
         limit: int = 50,
-        include_usernames: bool = True
+        include_usernames: bool = True,
     ) -> str:
         """Get context as formatted text.
 
@@ -194,12 +210,8 @@ class Memory:
             return ""
 
         if include_usernames:
-            return "\n".join(
-                f"{msg.username}: {msg.text}"
-                for msg in messages
-            )
-        else:
-            return "\n".join(msg.text for msg in messages)
+            return "\n".join(f"{msg.username}: {msg.text}" for msg in messages)
+        return "\n".join(msg.text for msg in messages)
 
     async def clear_chat_history(self, chat_id: int):
         """Clear all messages from a specific chat.
@@ -213,7 +225,7 @@ class Memory:
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute(
                 "DELETE FROM messages WHERE chat_id = ?",
-                (chat_id,)
+                (chat_id,),
             )
             await db.commit()
 
@@ -228,21 +240,21 @@ class Memory:
                 row = await cursor.fetchone()
                 return row[0] if row else 0
 
-    async def get_chat_statistics(self, chat_id: int) -> Dict:
+    async def get_chat_statistics(self, chat_id: int) -> dict:
         if not self._initialized:
             await self.initialize()
 
         async with aiosqlite.connect(self.db_path) as db:
             async with db.execute(
                 "SELECT COUNT(*) FROM messages WHERE chat_id = ?",
-                (chat_id,)
+                (chat_id,),
             ) as cursor:
                 row = await cursor.fetchone()
                 total = row[0] if row else 0
 
             async with db.execute(
                 "SELECT COUNT(DISTINCT user_id) FROM messages WHERE chat_id = ?",
-                (chat_id,)
+                (chat_id,),
             ) as cursor:
                 row = await cursor.fetchone()
                 unique_users = row[0] if row else 0
@@ -250,27 +262,29 @@ class Memory:
         return {
             "total_messages": total,
             "unique_users": unique_users,
-            "chat_id": chat_id
+            "chat_id": chat_id,
         }
 
     async def count_recent_bot_messages(
         self,
         chat_id: int,
         bot_user_id: int,
-        window_seconds: int = 60
+        window_seconds: int = 60,
     ) -> int:
         if not self._initialized:
             await self.initialize()
 
         cutoff_time = (datetime.now() - timedelta(seconds=window_seconds)).isoformat()
 
-        async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute(
+        async with (
+            aiosqlite.connect(self.db_path) as db,
+            db.execute(
                 """
                 SELECT COUNT(*) FROM messages
                 WHERE chat_id = ? AND user_id = ? AND timestamp > ?
                 """,
-                (chat_id, bot_user_id, cutoff_time)
-            ) as cursor:
-                row = await cursor.fetchone()
-                return row[0] if row else 0
+                (chat_id, bot_user_id, cutoff_time),
+            ) as cursor,
+        ):
+            row = await cursor.fetchone()
+            return row[0] if row else 0

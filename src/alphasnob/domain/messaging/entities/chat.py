@@ -1,8 +1,7 @@
 """Chat entity - represents a Telegram chat."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 
 from alphasnob.domain.messaging.value_objects.chat_id import ChatId
 from alphasnob.domain.shared.base_entity import Entity
@@ -42,15 +41,15 @@ class Chat(Entity):
     """
 
     chat_id: ChatId
-    title: Optional[str] = None
+    title: str | None = None
     chat_type: ChatType
-    username: Optional[str] = None
-    description: Optional[str] = None
+    username: str | None = None
+    description: str | None = None
 
     # Statistics
-    member_count: Optional[int] = None
+    member_count: int | None = None
     message_count: int = 0
-    last_message_at: Optional[datetime] = None
+    last_message_at: datetime | None = None
 
     # Status
     is_active: bool = True
@@ -88,7 +87,7 @@ class Chat(Entity):
             - Marks entity as updated
         """
         self.message_count += 1
-        self.last_message_at = datetime.now()
+        self.last_message_at = datetime.now(UTC)
         self.mark_updated()
 
     def deactivate(self) -> None:

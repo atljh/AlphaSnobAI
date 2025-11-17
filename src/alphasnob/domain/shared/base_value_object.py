@@ -4,7 +4,7 @@ Value Objects are immutable objects that are defined by their attributes,
 not by an identity. Two value objects with the same attributes are considered equal.
 """
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -40,7 +40,7 @@ class ValueObject(BaseModel):
         str_strip_whitespace=True,  # Strip whitespace from strings
     )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Value objects are equal if all attributes are equal."""
         if not isinstance(other, self.__class__):
             return False
@@ -60,5 +60,5 @@ class ValueObject(BaseModel):
         # If there's only one field, return its value
         fields = self.model_dump()
         if len(fields) == 1:
-            return str(list(fields.values())[0])
+            return str(next(iter(fields.values())))
         return repr(self)

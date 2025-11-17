@@ -1,7 +1,6 @@
 """User DTOs."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -13,16 +12,16 @@ class UserProfileDTO(BaseModel):
 
     id: str  # UUID as string
     user_id: int
-    username: Optional[str] = None
+    username: str | None = None
     first_name: str
-    last_name: Optional[str] = None
+    last_name: str | None = None
     relationship_level: str
     trust_score: float
     interaction_count: int
     positive_interactions: int
     negative_interactions: int
     detected_topics: list[str] = []
-    preferred_persona: Optional[str] = None
+    preferred_persona: str | None = None
     notes: str = ""
-    first_interaction: Optional[datetime] = None
-    last_interaction: Optional[datetime] = None
+    first_interaction: datetime | None = None
+    last_interaction: datetime | None = None

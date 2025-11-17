@@ -1,7 +1,5 @@
 """LLM response value object."""
 
-from typing import Optional
-
 from alphasnob.domain.shared.base_value_object import ValueObject
 from alphasnob.domain.shared.errors import ValidationError
 
@@ -28,15 +26,15 @@ class LLMResponse(ValueObject):
 
     text: str
     model: str
-    tokens_used: Optional[int] = None
-    finish_reason: Optional[str] = None
+    tokens_used: int | None = None
+    finish_reason: str | None = None
 
     def __init__(
         self,
         text: str,
         model: str,
-        tokens_used: Optional[int] = None,
-        finish_reason: Optional[str] = None,
+        tokens_used: int | None = None,
+        finish_reason: str | None = None,
     ) -> None:
         """Initialize LLM response with validation.
 
@@ -50,9 +48,10 @@ class LLMResponse(ValueObject):
             ValidationError: If text is empty
         """
         if not text.strip():
-            raise ValidationError("LLM response text cannot be empty")
+            msg = "LLM response text cannot be empty"
+            raise ValidationError(msg)
 
-        super().__init__(
+        super().__init__(  # type: ignore[call-arg]
             text=text,
             model=model,
             tokens_used=tokens_used,

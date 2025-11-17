@@ -1,25 +1,27 @@
-import sys
 import asyncio
 import signal
+import sys
 from pathlib import Path
-from rich.live import Live
+
 from rich.console import Console
+from rich.live import Live
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config.settings import get_settings
+from services.decision_engine import DecisionEngine
 from services.memory import Memory
-from services.style import StyleEngine
-from services.persona_manager import PersonaManager
 from services.owner_learning import OwnerLearningSystem
+from services.persona_manager import PersonaManager
+from services.style import StyleEngine
 from services.typing_simulator import TypingSimulator
 from services.user_profiler import UserProfiler
-from services.decision_engine import DecisionEngine
-from utils.language_detector import LanguageDetector
-from bot.handlers import MessageHandler
-from bot.client import AlphaSnobClient
-from bot.interactive import InteractiveSession
 from utils.interactive_logger import setup_interactive_logging
+from utils.language_detector import LanguageDetector
+
+from bot.client import AlphaSnobClient
+from bot.handlers import MessageHandler
+from bot.interactive import InteractiveSession
 
 console = Console()
 
@@ -50,13 +52,16 @@ async def run_interactive():
         api_key=api_key,
         model=settings.llm.model,
         temperature=settings.llm.temperature,
-        max_tokens=settings.llm.max_tokens
+        max_tokens=settings.llm.max_tokens,
     )
     session.add_log("SUCCESS", f"Style engine initialized ({settings.llm.provider})")
 
     # Persona Manager
     persona_manager = PersonaManager(settings)
-    session.add_log("SUCCESS", f"Persona manager initialized ({len(persona_manager.personas)} personas)")
+    session.add_log(
+        "SUCCESS",
+        f"Persona manager initialized ({len(persona_manager.personas)} personas)",
+    )
 
     # Owner Learning (optional)
     owner_learning = None
@@ -65,15 +70,22 @@ async def run_interactive():
         try:
             owner_learning = OwnerLearningSystem(
                 manual_samples_path=settings.owner_learning.manual_samples_path,
-                min_samples=settings.owner_learning.min_samples
+                min_samples=settings.owner_learning.min_samples,
             )
             if owner_learning.has_sufficient_samples():
-                session.add_log("SUCCESS", f"Owner learning initialized ({len(owner_learning.samples)} samples)")
+                session.add_log(
+                    "SUCCESS",
+                    f"Owner learning initialized ({len(owner_learning.samples)} samples)",
+                )
             else:
-                session.add_log("WARNING", f"Owner learning: insufficient samples ({len(owner_learning.samples)})")
+                session.add_log(
+                    "WARNING",
+                    f"Owner learning: insufficient samples ({len(owner_learning.samples)})",
+                )
 
             # Owner Collector
             from services.owner_collector import OwnerMessageCollector
+
             owner_collector = OwnerMessageCollector(settings.owner_learning)
             if settings.owner_learning.auto_collect:
                 session.add_log("SUCCESS", "Owner collector initialized (auto_collect enabled)")
@@ -86,22 +98,22 @@ async def run_interactive():
     # Language Detector
     language_detector = LanguageDetector(
         supported_languages=settings.language.supported,
-        default_language=settings.language.default
+        default_language=settings.language.default,
     )
-    session.add_log("SUCCESS", f"Language detector initialized")
+    session.add_log("SUCCESS", "Language detector initialized")
 
     # Typing Simulator
     typing_simulator = TypingSimulator(settings.typing)
-    session.add_log("SUCCESS", f"Typing simulator initialized")
+    session.add_log("SUCCESS", "Typing simulator initialized")
 
     # User Profiler
     user_profiler = UserProfiler(settings.paths.database, settings.profiling)
     await user_profiler.initialize()
-    session.add_log("SUCCESS", f"User profiler initialized")
+    session.add_log("SUCCESS", "User profiler initialized")
 
     # Decision Engine
     decision_engine = DecisionEngine(settings.decision)
-    session.add_log("SUCCESS", f"Decision engine initialized")
+    session.add_log("SUCCESS", "Decision engine initialized")
 
     # Message Handler (integrated)
     message_handler = MessageHandler(
@@ -115,11 +127,10 @@ async def run_interactive():
         language_detector=language_detector,
         owner_learning=owner_learning,
         owner_collector=owner_collector,
-        interactive_session=session
+        interactive_session=session,
     )
     session.add_log("SUCCESS", "Message handler initialized")
 
-    # Telegram Client
     client = AlphaSnobClient(message_handler)
     session.add_log("SUCCESS", "Telegram client initialized")
     session.add_log("INFO", f"Default persona: {settings.persona.default_mode}")

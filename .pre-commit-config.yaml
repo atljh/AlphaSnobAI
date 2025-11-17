@@ -5,17 +5,19 @@
 repos:
   # Ruff - Fast Python linter (replaces flake8, isort, pyupgrade, etc.)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.14.5
     hooks:
-      # Run linter
+      # Run linter (only on new src/alphasnob/ code)
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        files: ^src/alphasnob/
       # Run formatter
       - id: ruff-format
+        files: ^src/alphasnob/
 
-  # Mypy - Static type checking
+  # Mypy - Static type checking (only on new src/alphasnob/ code)
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.18.2
     hooks:
       - id: mypy
         additional_dependencies:
@@ -24,7 +26,7 @@ repos:
           - types-psutil
           - sqlalchemy[mypy]>=2.0.25
         args: [--config-file=pyproject.toml]
-        exclude: ^(tests/|migrations/)
+        files: ^src/alphasnob/
 
   # Black - Code formatter (backup if ruff-format has issues)
   # - repo: https://github.com/psf/black
@@ -34,7 +36,7 @@ repos:
 
   # Pre-commit hooks for files
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       # Check file formatting
       - id: trailing-whitespace
@@ -61,7 +63,7 @@ repos:
 
   # Security check
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.6
+    rev: 1.9.0
     hooks:
       - id: bandit
         args: [-c, pyproject.toml]
@@ -70,7 +72,7 @@ repos:
 
   # Check for secrets
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: [--baseline, .secrets.baseline]
@@ -86,14 +88,14 @@ repos:
         pass_filenames: false
         always_run: true
         args: [tests/, -v, --tb=short, --maxfail=1]
-        stages: [push]  # Only run on push, not on every commit
+        stages: [pre-push]  # Only run on push, not on every commit
 
 # Global settings
 default_language_version:
   python: python3.11
 
 # Stages
-default_stages: [commit]
+default_stages: [pre-commit]
 
 # Exclude directories
 exclude: |

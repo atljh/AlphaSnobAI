@@ -6,22 +6,33 @@ with validation, defaults, and preview functionality.
 
 import sys
 from pathlib import Path
-from typing import Any, Dict
-import yaml
+from typing import Any
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-    QPushButton, QLabel, QMessageBox, QScrollArea,
-    QGroupBox, QLineEdit, QSpinBox, QDoubleSpinBox,
-    QComboBox, QCheckBox, QTextEdit, QSlider, QFormLayout
-)
+import yaml
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSlider,
+    QSpinBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config.settings import get_settings, Settings
+from config.settings import get_settings
 
 
 class SettingsEditorWidget(QWidget):
@@ -84,26 +95,30 @@ class SettingsEditorWidget(QWidget):
 
         # Title
         title = QLabel("Configuration Editor")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 24px;
                 font-weight: 700;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         header_layout.addWidget(title)
 
         header_layout.addStretch()
 
         # Status label
         self.status_label = QLabel("No unsaved changes")
-        self.status_label.setStyleSheet("""
+        self.status_label.setStyleSheet(
+            """
             QLabel {
                 font-size: 13px;
                 color: #10b981;
                 font-weight: 600;
             }
-        """)
+        """,
+        )
         header_layout.addWidget(self.status_label)
 
         return header
@@ -128,7 +143,9 @@ class SettingsEditorWidget(QWidget):
         telegram_group.setObjectName("glassCard")
         telegram_layout = QFormLayout(telegram_group)
 
-        self.session_name_input = QLineEdit(self.current_config.get("telegram", {}).get("session_name", ""))
+        self.session_name_input = QLineEdit(
+            self.current_config.get("telegram", {}).get("session_name", ""),
+        )
         telegram_layout.addRow("Session Name:", self.session_name_input)
 
         content_layout.addWidget(telegram_group)
@@ -214,7 +231,7 @@ class SettingsEditorWidget(QWidget):
         self.llm_temp_slider.setValue(int(llm.get("temperature", 0.9) * 100))
         self.llm_temp_label = QLabel(f"{llm.get('temperature', 0.9):.2f}")
         self.llm_temp_slider.valueChanged.connect(
-            lambda v: self.llm_temp_label.setText(f"{v/100:.2f}")
+            lambda v: self.llm_temp_label.setText(f"{v / 100:.2f}"),
         )
 
         temp_layout.addWidget(self.llm_temp_slider)
@@ -271,7 +288,7 @@ class SettingsEditorWidget(QWidget):
         self.response_prob_slider.setValue(int(bot.get("response_probability", 0.3) * 100))
         self.response_prob_label = QLabel(f"{bot.get('response_probability', 0.3):.2f}")
         self.response_prob_slider.valueChanged.connect(
-            lambda v: self.response_prob_label.setText(f"{v/100:.2f}")
+            lambda v: self.response_prob_label.setText(f"{v / 100:.2f}"),
         )
 
         prob_layout.addWidget(self.response_prob_slider)
@@ -442,7 +459,8 @@ class SettingsEditorWidget(QWidget):
         reset_btn = QPushButton("Reset to Defaults")
         reset_btn.setMinimumHeight(44)
         reset_btn.setCursor(Qt.PointingHandCursor)
-        reset_btn.setStyleSheet("""
+        reset_btn.setStyleSheet(
+            """
             QPushButton {
                 background: rgba(71, 85, 105, 0.5);
                 color: white;
@@ -455,7 +473,8 @@ class SettingsEditorWidget(QWidget):
             QPushButton:hover {
                 background: rgba(71, 85, 105, 0.7);
             }
-        """)
+        """,
+        )
         reset_btn.clicked.connect(self._on_reset_clicked)
         actions_layout.addWidget(reset_btn)
 
@@ -465,7 +484,8 @@ class SettingsEditorWidget(QWidget):
         save_btn = QPushButton("Save Settings")
         save_btn.setMinimumHeight(44)
         save_btn.setCursor(Qt.PointingHandCursor)
-        save_btn.setStyleSheet("""
+        save_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -486,7 +506,8 @@ class SettingsEditorWidget(QWidget):
                     stop:1 #7c3aed
                 );
             }
-        """)
+        """,
+        )
         save_btn.clicked.connect(self._on_save_clicked)
         actions_layout.addWidget(save_btn)
 
@@ -494,7 +515,8 @@ class SettingsEditorWidget(QWidget):
         save_apply_btn = QPushButton("Save & Restart Bot")
         save_apply_btn.setMinimumHeight(44)
         save_apply_btn.setCursor(Qt.PointingHandCursor)
-        save_apply_btn.setStyleSheet("""
+        save_apply_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -515,26 +537,27 @@ class SettingsEditorWidget(QWidget):
                     stop:1 #0891b2
                 );
             }
-        """)
+        """,
+        )
         save_apply_btn.clicked.connect(self._on_save_apply_clicked)
         actions_layout.addWidget(save_apply_btn)
 
         return actions
 
-    def _load_yaml(self) -> Dict[str, Any]:
+    def _load_yaml(self) -> dict[str, Any]:
         """Load current YAML configuration."""
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
             QMessageBox.warning(
                 self,
                 "Load Error",
-                f"Failed to load configuration:\n{e}"
+                f"Failed to load configuration:\n{e}",
             )
             return {}
 
-    def _collect_current_values(self) -> Dict[str, Any]:
+    def _collect_current_values(self) -> dict[str, Any]:
         """Collect current values from all inputs."""
         config = self.current_config.copy()
 
@@ -564,7 +587,7 @@ class SettingsEditorWidget(QWidget):
         allowed_users_text = self.allowed_users_input.toPlainText().strip()
         if allowed_users_text:
             config["bot"]["allowed_users"] = [
-                int(uid.strip()) for uid in allowed_users_text.split('\n') if uid.strip()
+                int(uid.strip()) for uid in allowed_users_text.split("\n") if uid.strip()
             ]
         else:
             config["bot"]["allowed_users"] = []
@@ -578,7 +601,7 @@ class SettingsEditorWidget(QWidget):
         owner_ids_text = self.ol_owner_ids_input.toPlainText().strip()
         if owner_ids_text:
             config["owner_learning"]["owner_user_ids"] = [
-                int(uid.strip()) for uid in owner_ids_text.split('\n') if uid.strip()
+                int(uid.strip()) for uid in owner_ids_text.split("\n") if uid.strip()
             ]
         else:
             config["owner_learning"]["owner_user_ids"] = []
@@ -589,17 +612,17 @@ class SettingsEditorWidget(QWidget):
 
         return config
 
-    def _save_config(self, config: Dict[str, Any]) -> bool:
+    def _save_config(self, config: dict[str, Any]) -> bool:
         """Save configuration to YAML file."""
         try:
-            with open(self.config_path, 'w', encoding='utf-8') as f:
+            with open(self.config_path, "w", encoding="utf-8") as f:
                 yaml.dump(config, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
             return True
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Save Error",
-                f"Failed to save configuration:\n{e}"
+                f"Failed to save configuration:\n{e}",
             )
             return False
 
@@ -612,12 +635,14 @@ class SettingsEditorWidget(QWidget):
             self.original_config = config.copy()
             self.has_unsaved_changes = False
             self.status_label.setText("Settings saved successfully!")
-            self.status_label.setStyleSheet("QLabel { color: #10b981; font-size: 13px; font-weight: 600; }")
+            self.status_label.setStyleSheet(
+                "QLabel { color: #10b981; font-size: 13px; font-weight: 600; }",
+            )
 
             QMessageBox.information(
                 self,
                 "Success",
-                "Settings saved successfully!\n\nRestart the bot for changes to take effect."
+                "Settings saved successfully!\n\nRestart the bot for changes to take effect.",
             )
 
             self.settings_changed.emit()
@@ -629,7 +654,7 @@ class SettingsEditorWidget(QWidget):
             "Confirm",
             "Save settings and restart the bot?",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
@@ -643,7 +668,7 @@ class SettingsEditorWidget(QWidget):
             "Confirm Reset",
             "Reset all settings to defaults?\n\nThis will discard unsaved changes.",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:

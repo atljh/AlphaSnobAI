@@ -31,19 +31,21 @@ class UserId(ValueObject):
             ValidationError: If user ID is invalid
         """
         if value <= 0:
+            msg = "User ID must be positive"
             raise ValidationError(
-                "User ID must be positive",
+                msg,
                 user_id=value,
             )
 
         # Telegram user IDs are typically < 10 billion
-        if value > 10_000_000_000:
+        if value > 10_000_000_000:  # noqa: PLR2004
+            msg = "User ID exceeds maximum value"
             raise ValidationError(
-                "User ID exceeds maximum value",
+                msg,
                 user_id=value,
             )
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def __int__(self) -> int:
         """Allow conversion to int."""

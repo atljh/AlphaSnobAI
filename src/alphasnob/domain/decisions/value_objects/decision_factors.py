@@ -1,7 +1,5 @@
 """Decision factors value object."""
 
-from typing import Optional
-
 from alphasnob.domain.shared.base_value_object import ValueObject
 
 
@@ -77,9 +75,7 @@ class DecisionFactors(ValueObject):
         if self.cooldown_active:
             return False
 
-        return (
-            self.is_private_chat or self.mention_multiplier > 1.5 or self.is_reply_to_bot
-        )
+        return self.is_private_chat or self.mention_multiplier > 1.5 or self.is_reply_to_bot  # noqa: PLR2004
 
     def should_block_response(self) -> bool:
         """Check if factors should block response.

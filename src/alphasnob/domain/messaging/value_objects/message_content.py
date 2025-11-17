@@ -32,13 +32,14 @@ class MessageContent(ValueObject):
             ValidationError: If text exceeds Telegram limits
         """
         # Telegram message limit is 4096 characters
-        if len(text) > 4096:
+        if len(text) > 4096:  # noqa: PLR2004
+            msg = "Message text exceeds Telegram limit of 4096 characters"
             raise ValidationError(
-                "Message text exceeds Telegram limit of 4096 characters",
+                msg,
                 length=len(text),
             )
 
-        super().__init__(text=text)
+        super().__init__(text=text)  # type: ignore[call-arg]
 
     def is_empty(self) -> bool:
         """Check if message is empty.
@@ -79,7 +80,7 @@ class MessageContent(ValueObject):
         text_lower = self.text.lower()
         return f"@{username_clean}" in text_lower
 
-    def contains_keyword(self, keyword: str, case_sensitive: bool = False) -> bool:
+    def contains_keyword(self, keyword: str, *, case_sensitive: bool = False) -> bool:
         """Check if text contains keyword.
 
         Args:

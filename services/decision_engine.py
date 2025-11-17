@@ -1,12 +1,12 @@
 import logging
 import random
-from datetime import datetime, timedelta
-from typing import List, Optional
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from config.settings import DecisionConfig
-from services.user_profiler import UserProfile
+
 from services.memory import Message
+from services.user_profiler import UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,6 @@ class DecisionResult:
 
 
 class DecisionEngine:
-
     def __init__(self, decision_config: DecisionConfig):
         self.config = decision_config
         logger.info(f"DecisionEngine initialized (base_p={self.config.base_probability})")
@@ -37,8 +36,8 @@ class DecisionEngine:
         user_profile: UserProfile,
         message_text: str,
         current_time: datetime,
-        recent_bot_messages: List[Message],
-        bot_user_id: int
+        recent_bot_messages: list[Message],
+        bot_user_id: int,
     ) -> DecisionResult:
         """
         Main decision function. Analyzes multiple factors to determine if bot should respond.
@@ -59,7 +58,7 @@ class DecisionEngine:
         # 1. Relationship multiplier
         relationship_mult = self._get_relationship_multiplier(user_profile.relationship_level)
         reasoning_parts.append(
-            f"relationship={user_profile.relationship_level} ({relationship_mult}x)"
+            f"relationship={user_profile.relationship_level} ({relationship_mult}x)",
         )
 
         # 2. Time-based multiplier
@@ -94,13 +93,14 @@ class DecisionEngine:
         final_p = max(0.0, min(1.0, final_p))
 
         # Random decision
-        random_value = random.random()
+        random_value = random.random()  # nosec B311
         should_respond = (random_value <= final_p) and not cooldown_blocked
 
         # Build reasoning string
         reasoning = (
-            f"base={base_p:.2f} × " + " × ".join(reasoning_parts) +
-            f" = {final_p:.2f} | random={random_value:.2f} | "
+            f"base={base_p:.2f} × "
+            + " × ".join(reasoning_parts)
+            + f" = {final_p:.2f} | random={random_value:.2f} | "
             f"{'RESPOND' if should_respond else 'SKIP'}"
         )
 
@@ -114,7 +114,7 @@ class DecisionEngine:
             time_multiplier=time_mult,
             topic_multiplier=topic_mult,
             cooldown_block=cooldown_blocked,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
     def _get_relationship_multiplier(self, relationship_level: str) -> float:
@@ -142,9 +142,8 @@ class DecisionEngine:
             multiplier = self.config.time_based.quiet_hours_multiplier
             logger.debug(f"Quiet hours detected (hour={current_hour}): {multiplier}x")
             return multiplier
-        else:
-            logger.debug(f"Active hours (hour={current_hour}): 1.0x")
-            return 1.0
+        logger.debug(f"Active hours (hour={current_hour}): 1.0x")
+        return 1.0
 
     def _get_topic_multiplier(self, message_text: str) -> float:
         """Get probability multiplier based on detected topics in message."""
@@ -170,10 +169,10 @@ class DecisionEngine:
 
     def _check_cooldown(
         self,
-        recent_bot_messages: List[Message],
+        recent_bot_messages: list[Message],
         current_time: datetime,
-        bot_user_id: int
-    ) -> Optional[str]:
+        bot_user_id: int,
+    ) -> str | None:
         """
         Check cooldown rules to prevent spamming.
 
@@ -205,10 +204,7 @@ class DecisionEngine:
 
         # Count consecutive bot messages within reset window
         cutoff_time = current_time - timedelta(seconds=reset_after)
-        recent_consecutive = [
-            msg for msg in bot_messages
-            if msg.timestamp >= cutoff_time
-        ]
+        recent_consecutive = [msg for msg in bot_messages if msg.timestamp >= cutoff_time]
 
         if len(recent_consecutive) >= max_consecutive:
             return f"consecutive_limit ({len(recent_consecutive)}/{max_consecutive})"
@@ -225,6 +221,6 @@ class DecisionEngine:
   - Time: {result.time_multiplier}x
   - Topic: {result.topic_multiplier}x
 - Cooldown Block: {result.cooldown_block}
-- Decision: {'RESPOND' if result.should_respond else 'SKIP'}
+- Decision: {"RESPOND" if result.should_respond else "SKIP"}
 - Reasoning: {result.reasoning}
 """

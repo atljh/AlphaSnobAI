@@ -1,15 +1,16 @@
 """Log viewing and filtering utilities."""
 
 import re
-from pathlib import Path
-from typing import Optional, List, Iterator
-from datetime import datetime, timedelta
+from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 
 
 class LogLevel(str, Enum):
     """Log levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -21,6 +22,7 @@ class LogLevel(str, Enum):
 @dataclass
 class LogEntry:
     """Parsed log entry."""
+
     timestamp: datetime
     logger: str
     level: LogLevel
@@ -33,7 +35,7 @@ class LogViewer:
 
     # Log line pattern: timestamp - logger - level - message
     LOG_PATTERN = re.compile(
-        r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - ([\w\.]+) - (\w+) - (.+)$'
+        r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - ([\w\.]+) - (\w+) - (.+)$",
     )
 
     # Level icons
@@ -64,7 +66,7 @@ class LogViewer:
         """
         self.log_path = log_path
 
-    def parse_line(self, line: str) -> Optional[LogEntry]:
+    def parse_line(self, line: str) -> LogEntry | None:
         """Parse a log line.
 
         Args:
@@ -88,19 +90,19 @@ class LogViewer:
                 logger=logger,
                 level=level,
                 message=message,
-                raw=line
+                raw=line,
             )
         except (ValueError, KeyError):
             return None
 
     def read_logs(
         self,
-        lines: Optional[int] = None,
-        level: Optional[LogLevel] = None,
-        since: Optional[timedelta] = None,
-        search: Optional[str] = None,
-        reverse: bool = True
-    ) -> List[LogEntry]:
+        lines: int | None = None,
+        level: LogLevel | None = None,
+        since: timedelta | None = None,
+        search: str | None = None,
+        reverse: bool = True,
+    ) -> list[LogEntry]:
         """Read and filter logs.
 
         Args:
@@ -119,7 +121,7 @@ class LogViewer:
         entries = []
         cutoff_time = datetime.now() - since if since else None
 
-        with open(self.log_path, 'r', encoding='utf-8') as f:
+        with open(self.log_path, encoding="utf-8") as f:
             for line in f:
                 entry = self.parse_line(line)
                 if not entry:
@@ -150,8 +152,8 @@ class LogViewer:
 
     def tail_logs(
         self,
-        level: Optional[LogLevel] = None,
-        search: Optional[str] = None
+        level: LogLevel | None = None,
+        search: str | None = None,
     ) -> Iterator[LogEntry]:
         """Tail log file (like tail -f).
 
@@ -167,7 +169,7 @@ class LogViewer:
         if not self.log_path.exists():
             return
 
-        with open(self.log_path, 'r', encoding='utf-8') as f:
+        with open(self.log_path, encoding="utf-8") as f:
             # Go to end of file
             f.seek(0, 2)
 
@@ -194,9 +196,9 @@ class LogViewer:
     def export_logs(
         self,
         output_path: Path,
-        level: Optional[LogLevel] = None,
-        since: Optional[timedelta] = None,
-        search: Optional[str] = None
+        level: LogLevel | None = None,
+        since: timedelta | None = None,
+        search: str | None = None,
     ) -> int:
         """Export filtered logs to file.
 
@@ -214,10 +216,10 @@ class LogViewer:
             level=level,
             since=since,
             search=search,
-            reverse=False
+            reverse=False,
         )
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             for entry in entries:
                 f.write(entry.raw)
 

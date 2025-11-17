@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 
 class InteractiveHandler(logging.Handler):
@@ -22,7 +21,7 @@ def setup_interactive_logging(session):
     logger.handlers.clear()
 
     handler = InteractiveHandler(session)
-    handler.setFormatter(logging.Formatter('%(message)s'))
+    handler.setFormatter(logging.Formatter("%(message)s"))
     logger.addHandler(handler)
 
     return logger

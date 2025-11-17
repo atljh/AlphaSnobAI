@@ -1,6 +1,6 @@
 """Style repository interface (port)."""
 
-from typing import Optional, Protocol
+from typing import Protocol
 from uuid import UUID
 
 from alphasnob.domain.learning.entities.style_analysis import StyleAnalysis
@@ -16,11 +16,11 @@ class StyleSampleRepository(Protocol):
     - Hybrid approach
     """
 
-    async def get_by_id(self, id: UUID) -> Optional[StyleSample]:
+    async def get_by_id(self, sample_id: UUID) -> StyleSample | None:
         """Get sample by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            sample_id: Internal entity UUID
 
         Returns:
             StyleSample if found, None otherwise
@@ -43,7 +43,7 @@ class StyleSampleRepository(Protocol):
         """
         ...
 
-    async def find_all(self, verified_only: bool = True) -> list[StyleSample]:
+    async def find_all(self, *, verified_only: bool = True) -> list[StyleSample]:
         """Get all samples.
 
         Args:
@@ -76,7 +76,7 @@ class StyleSampleRepository(Protocol):
         """
         ...
 
-    async def count(self, verified_only: bool = True) -> int:
+    async def count(self, *, verified_only: bool = True) -> int:
         """Count total samples.
 
         Args:
@@ -87,7 +87,7 @@ class StyleSampleRepository(Protocol):
         """
         ...
 
-    async def clear_all(self, source: Optional[str] = None) -> None:
+    async def clear_all(self, source: str | None = None) -> None:
         """Clear all samples or samples from specific source.
 
         Args:
@@ -102,7 +102,7 @@ class StyleAnalysisRepository(Protocol):
     Typically only one analysis exists at a time (latest).
     """
 
-    async def get_latest(self) -> Optional[StyleAnalysis]:
+    async def get_latest(self) -> StyleAnalysis | None:
         """Get latest style analysis.
 
         Returns:

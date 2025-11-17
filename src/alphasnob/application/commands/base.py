@@ -9,6 +9,8 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel
 from returns.result import Result
 
+# Command type
+TCommand = TypeVar("TCommand", bound="Command")
 # Command result type (success value)
 TResult = TypeVar("TResult")
 
@@ -30,7 +32,7 @@ class Command(BaseModel):
         frozen = True  # Commands are immutable
 
 
-class CommandHandler(ABC, Generic[TResult]):
+class CommandHandler(ABC, Generic[TCommand, TResult]):
     """Base class for command handlers.
 
     Each command has exactly one handler that executes the command.
@@ -39,7 +41,7 @@ class CommandHandler(ABC, Generic[TResult]):
     programming instead of raising exceptions.
 
     Examples:
-        class SendMessageCommandHandler(CommandHandler[UUID]):
+        class SendMessageCommandHandler(CommandHandler[SendMessageCommand, UUID]):
             async def handle(self, command: SendMessageCommand) -> Result[UUID, Error]:
                 # Execute command logic
                 ...
@@ -47,7 +49,7 @@ class CommandHandler(ABC, Generic[TResult]):
     """
 
     @abstractmethod
-    async def handle(self, command: Command) -> Result[TResult, Exception]:
+    async def handle(self, command: TCommand) -> Result[TResult, Exception]:
         """Handle the command.
 
         Args:

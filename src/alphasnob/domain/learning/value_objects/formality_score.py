@@ -33,12 +33,13 @@ class FormalityScore(ValueObject):
             ValidationError: If value is out of range
         """
         if not 0.0 <= value <= 1.0:
+            msg = "Formality score must be between 0.0 and 1.0"
             raise ValidationError(
-                "Formality score must be between 0.0 and 1.0",
+                msg,
                 value=value,
             )
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def is_casual(self) -> bool:
         """Check if style is casual (< 0.4).
@@ -46,7 +47,7 @@ class FormalityScore(ValueObject):
         Returns:
             True if casual, False otherwise
         """
-        return self.value < 0.4
+        return self.value < 0.4  # noqa: PLR2004
 
     def is_neutral(self) -> bool:
         """Check if style is neutral (0.4-0.6).
@@ -54,7 +55,7 @@ class FormalityScore(ValueObject):
         Returns:
             True if neutral, False otherwise
         """
-        return 0.4 <= self.value <= 0.6
+        return 0.4 <= self.value <= 0.6  # noqa: PLR2004
 
     def is_formal(self) -> bool:
         """Check if style is formal (> 0.6).
@@ -62,7 +63,7 @@ class FormalityScore(ValueObject):
         Returns:
             True if formal, False otherwise
         """
-        return self.value > 0.6
+        return self.value > 0.6  # noqa: PLR2004
 
     def get_label(self) -> str:
         """Get human-readable label.
@@ -72,10 +73,9 @@ class FormalityScore(ValueObject):
         """
         if self.is_casual():
             return "Casual"
-        elif self.is_neutral():
+        if self.is_neutral():
             return "Neutral"
-        else:
-            return "Formal"
+        return "Formal"
 
     def __float__(self) -> float:
         """Allow conversion to float."""

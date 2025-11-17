@@ -7,7 +7,6 @@ This service orchestrates the complete message handling flow:
 4. Send response
 """
 
-from typing import Optional
 from uuid import UUID
 
 from returns.result import Failure, Result, Success
@@ -45,7 +44,7 @@ class MessageHandlingService:
         user_profile_repository: UserProfileRepository,
         decision_engine: DecisionEngine,
         bot_user_id: UserId,
-        bot_username: Optional[str] = None,
+        bot_username: str | None = None,
     ):
         """Initialize service with dependencies.
 
@@ -81,11 +80,12 @@ class MessageHandlingService:
         chat_id: int,
         user_id: int,
         text: str,
-        username: Optional[str] = None,
+        username: str | None = None,
         first_name: str = "Unknown",
-        last_name: Optional[str] = None,
+        last_name: str | None = None,
+        *,
         is_private_chat: bool = False,
-    ) -> Result[Optional[UUID], Exception]:
+    ) -> Result[UUID | None, Exception]:
         """Handle incoming message.
 
         This is the main entry point for processing Telegram messages.
@@ -132,11 +132,15 @@ class MessageHandlingService:
 
         except DomainError as e:
             return Failure(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return Failure(e)
 
     async def send_response(
-        self, chat_id: int, text: str, persona_mode: str, decision_score: Optional[float] = None
+        self,
+        chat_id: int,
+        text: str,
+        persona_mode: str,
+        decision_score: float | None = None,
     ) -> Result[UUID, Exception]:
         """Send bot response to chat.
 

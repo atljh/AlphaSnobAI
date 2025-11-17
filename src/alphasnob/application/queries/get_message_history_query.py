@@ -21,7 +21,7 @@ class GetMessageHistoryQuery(Query):
     limit: int = 50
 
 
-class GetMessageHistoryQueryHandler(QueryHandler[list[MessageDTO]]):
+class GetMessageHistoryQueryHandler(QueryHandler["GetMessageHistoryQuery", list[MessageDTO]]):
     """Handler for GetMessageHistoryQuery."""
 
     def __init__(self, message_repository: MessageRepository):
@@ -33,7 +33,8 @@ class GetMessageHistoryQueryHandler(QueryHandler[list[MessageDTO]]):
         self.message_repository = message_repository
 
     async def handle(
-        self, query: GetMessageHistoryQuery
+        self,
+        query: GetMessageHistoryQuery,
     ) -> Result[list[MessageDTO], Exception]:
         """Handle get message history query.
 
@@ -46,7 +47,8 @@ class GetMessageHistoryQueryHandler(QueryHandler[list[MessageDTO]]):
         try:
             # Get messages from repository
             messages = await self.message_repository.find_recent_in_chat(
-                chat_id=ChatId(query.chat_id), limit=query.limit
+                chat_id=ChatId(query.chat_id),
+                limit=query.limit,
             )
 
             # Convert to DTOs
@@ -69,5 +71,5 @@ class GetMessageHistoryQueryHandler(QueryHandler[list[MessageDTO]]):
 
         except DomainError as e:
             return Failure(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return Failure(e)

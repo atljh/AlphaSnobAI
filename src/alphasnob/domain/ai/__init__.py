@@ -6,8 +6,8 @@ from alphasnob.domain.ai.value_objects.prompt import Prompt
 from alphasnob.domain.ai.value_objects.temperature import Temperature
 
 __all__ = [
+    "LLMResponse",
     "Persona",
     "Prompt",
     "Temperature",
-    "LLMResponse",
 ]

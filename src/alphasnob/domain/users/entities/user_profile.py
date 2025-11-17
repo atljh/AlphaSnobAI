@@ -1,13 +1,19 @@
 """User profile entity - complete user information with relationships."""
 
-from datetime import datetime
-from typing import Optional
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+from pydantic import Field
 
 from alphasnob.domain.shared.base_entity import Entity
 from alphasnob.domain.shared.errors import InvalidOperationError
 from alphasnob.domain.users.value_objects.relationship import Relationship, RelationshipLevel
 from alphasnob.domain.users.value_objects.trust_score import TrustScore
-from alphasnob.domain.users.value_objects.user_id import UserId
+
+if TYPE_CHECKING:
+    from alphasnob.domain.users.value_objects.user_id import UserId
 
 
 class UserProfile(Entity):
@@ -51,9 +57,9 @@ class UserProfile(Entity):
     """
 
     user_id: UserId
-    username: Optional[str] = None
+    username: str | None = None
     first_name: str = "Unknown"
-    last_name: Optional[str] = None
+    last_name: str | None = None
 
     # Relationship & Trust
     relationship: Relationship
@@ -65,15 +71,15 @@ class UserProfile(Entity):
     negative_interactions: int = 0
 
     # Context
-    detected_topics: list[str] = []
-    preferred_persona: Optional[str] = None
+    detected_topics: list[str] = Field(default_factory=list)
+    preferred_persona: str | None = None
     notes: str = ""
 
     # Timestamps
-    first_interaction: Optional[datetime] = None
-    last_interaction: Optional[datetime] = None
+    first_interaction: datetime | None = None
+    last_interaction: datetime | None = None
 
-    def record_interaction(self, is_positive: bool = True) -> None:
+    def record_interaction(self, *, is_positive: bool = True) -> None:
         """Record an interaction with this user.
 
         Args:
@@ -92,7 +98,7 @@ class UserProfile(Entity):
         else:
             self.negative_interactions += 1
 
-        now = datetime.now()
+        now = datetime.now(UTC)
         if self.first_interaction is None:
             self.first_interaction = now
         self.last_interaction = now
@@ -129,19 +135,19 @@ class UserProfile(Entity):
             - Marks entity as updated if upgraded
         """
         # Check if eligible for upgrade
-        if self.interaction_count < 10:
+        if self.interaction_count < 10:  # noqa: PLR2004
             return False
 
         positive_rate = self.positive_interactions / self.interaction_count
-        if positive_rate < 0.8:
+        if positive_rate < 0.8:  # noqa: PLR2004
             return False
 
-        if self.trust_score.value < 0.6:
+        if self.trust_score.value < 0.6:  # noqa: PLR2004
             return False
 
         # Determine target level
         current_level = self.relationship.level
-        target_level: Optional[RelationshipLevel] = None
+        target_level: RelationshipLevel | None = None
 
         if current_level == RelationshipLevel.STRANGER:
             target_level = RelationshipLevel.ACQUAINTANCE
@@ -177,8 +183,9 @@ class UserProfile(Entity):
         """
         # Validate owner status (should be set through special method)
         if level == RelationshipLevel.OWNER:
+            msg = "Cannot manually set OWNER status, use promote_to_owner()"
             raise InvalidOperationError(
-                "Cannot manually set OWNER status, use promote_to_owner()",
+                msg,
                 user_id=str(self.user_id),
             )
 
@@ -226,8 +233,9 @@ class UserProfile(Entity):
             - Marks entity as updated
         """
         if self.relationship.level != RelationshipLevel.BLOCKED:
+            msg = "Cannot unblock user that is not blocked"
             raise InvalidOperationError(
-                "Cannot unblock user that is not blocked",
+                msg,
                 user_id=str(self.user_id),
             )
 
@@ -285,6 +293,29 @@ class UserProfile(Entity):
             True if not blocked, False otherwise
         """
         return self.relationship.can_interact()
+
+    def add_detected_topic(self, topic: str) -> None:
+        """Add a detected conversation topic.
+
+        Args:
+            topic: Topic name to add
+
+        Side effects:
+            - Adds topic to detected_topics if not already present
+        """
+        if topic not in self.detected_topics:
+            self.detected_topics.append(topic)
+            self.mark_updated()
+
+    def get_positive_interaction_rate(self) -> float:
+        """Get rate of positive interactions.
+
+        Returns:
+            Ratio of positive to total interactions (0.0-1.0), or 0.0 if no interactions
+        """
+        if self.interaction_count == 0:
+            return 0.0
+        return self.positive_interactions / self.interaction_count
 
     def __str__(self) -> str:
         """Return human-readable string."""

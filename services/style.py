@@ -1,6 +1,5 @@
 import logging
 import random
-from typing import List, Optional
 from pathlib import Path
 
 try:
@@ -14,21 +13,21 @@ except ImportError:
     AsyncOpenAI = None
 
 from utils.corpus_loader import CorpusLoader
+
 from services.memory import Message
 
 logger = logging.getLogger(__name__)
 
 
 class StyleEngine:
-
     def __init__(
         self,
         corpus_path: Path,
         provider: str = "claude",
-        api_key: Optional[str] = None,
-        model: Optional[str] = None,
+        api_key: str | None = None,
+        model: str | None = None,
         temperature: float = 0.9,
-        max_tokens: int = 500
+        max_tokens: int = 500,
     ):
         self.provider = provider
         self.temperature = temperature
@@ -55,13 +54,31 @@ class StyleEngine:
         text_lower = text.lower()
 
         aggressive_markers = [
-            "бля", "хуй", "пиз", "еб", "сука", "дура", "идиот",
-            "тупой", "дебил", "урод", "говно", "!!"
+            "бля",
+            "хуй",
+            "пиз",
+            "еб",
+            "сука",
+            "дура",
+            "идиот",
+            "тупой",
+            "дебил",
+            "урод",
+            "говно",
+            "!!",
         ]
 
         friendly_markers = [
-            "привет", "спасибо", "пожалуйста", "хорошо", "отлично",
-            "круто", "класс", "😊", "❤", "👍"
+            "привет",
+            "спасибо",
+            "пожалуйста",
+            "хорошо",
+            "отлично",
+            "круто",
+            "класс",
+            "😊",
+            "❤",
+            "👍",
         ]
 
         aggressive_count = sum(1 for marker in aggressive_markers if marker in text_lower)
@@ -69,40 +86,35 @@ class StyleEngine:
 
         if aggressive_count > 0:
             return "aggressive"
-        elif friendly_count > 0:
+        if friendly_count > 0:
             return "friendly"
-        else:
-            return "neutral"
+        return "neutral"
 
     def _choose_response_mode(self, text: str) -> str:
         text_length = len(text.strip())
 
         if text_length <= 10:
-            rand = random.random()
+            rand = random.random()  # nosec B311
             if rand < 0.70:
                 return "short"
-            elif rand < 0.90:
+            if rand < 0.90:
                 return "medium"
-            else:
-                return "long"
-        elif text_length <= 50:
-            rand = random.random()
+            return "long"
+        if text_length <= 50:
+            rand = random.random()  # nosec B311
             if rand < 0.50:
                 return "short"
-            elif rand < 0.80:
+            if rand < 0.80:
                 return "medium"
-            else:
-                return "long"
-        else:
-            rand = random.random()
-            if rand < 0.30:
-                return "short"
-            elif rand < 0.70:
-                return "medium"
-            else:
-                return "long"
+            return "long"
+        rand = random.random()  # nosec B311
+        if rand < 0.30:
+            return "short"
+        if rand < 0.70:
+            return "medium"
+        return "long"
 
-    def _get_short_template(self, tone: str) -> Optional[str]:
+    def _get_short_template(self, tone: str) -> str | None:
         templates = {
             "aggressive": [
                 "Лол",
@@ -141,14 +153,19 @@ class StyleEngine:
                 "Ну здравствуй",
                 "Опять ты, убогий?",
                 "Лол, зачем вернулся?",
-            ]
+            ],
         }
 
-        if random.random() < 0.5:
-            return random.choice(templates.get(tone, templates["neutral"]))
+        if random.random() < 0.5:  # nosec B311
+            return random.choice(templates.get(tone, templates["neutral"]))  # nosec B311
         return None
 
-    def _build_system_prompt(self, tone: str, corpus_examples: List[str], response_mode: str) -> str:
+    def _build_system_prompt(
+        self,
+        tone: str,
+        corpus_examples: list[str],
+        response_mode: str,
+    ) -> str:
         examples_text = "\n".join(f"- {ex}" for ex in corpus_examples)
 
         base_instruction = """Ты — AlphaSnob, элитарный эстет-псих с гипертрофированным чувством собственного превосходства.
@@ -170,23 +187,25 @@ class StyleEngine:
         mode_instruction = {
             "short": "\n\nДЛИНА: Дай КОРОТКИЙ ответ. 1-15 слов максимум. Без метафор. Прямо и грубо.",
             "medium": "\n\nДЛИНА: Средний ответ. 20-50 слов. Можно одну простую метафору.",
-            "long": "\n\nДЛИНА: Можешь дать развёрнутый ответ с метафорами и деталями."
+            "long": "\n\nДЛИНА: Можешь дать развёрнутый ответ с метафорами и деталями.",
         }
 
         tone_instruction = {
             "aggressive": "\nТОН: Агрессия. Жёсткий треш, унижения.",
             "neutral": "\nТОН: Нейтрально. Лёгкий снобизм или скучное презрение.",
-            "friendly": "\nТОН: Дружелюбен. Сарказм, ирония."
+            "friendly": "\nТОН: Дружелюбен. Сарказм, ирония.",
         }
 
         examples_section = f"\n\nПРИМЕРЫ СТИЛЯ:\n{examples_text}\n\nВдохновляйся этими примерами. Создавай новые фразы в том же духе."
 
-        return (base_instruction +
-                mode_instruction.get(response_mode, "") +
-                tone_instruction.get(tone, "") +
-                examples_section)
+        return (
+            base_instruction
+            + mode_instruction.get(response_mode, "")
+            + tone_instruction.get(tone, "")
+            + examples_section
+        )
 
-    def _build_context_string(self, context_messages: List[Message]) -> str:
+    def _build_context_string(self, context_messages: list[Message]) -> str:
         if not context_messages:
             return "Контекст пуст."
 
@@ -199,10 +218,9 @@ class StyleEngine:
     async def generate_response(
         self,
         incoming_message: str,
-        context_messages: Optional[List[Message]] = None,
-        sender_name: Optional[str] = None
+        context_messages: list[Message] | None = None,
+        sender_name: str | None = None,
     ) -> str:
-
         tone = self._detect_tone(incoming_message)
         response_mode = self._choose_response_mode(incoming_message)
         logger.debug(f"Detected tone: {tone}, response_mode: {response_mode}")
@@ -220,21 +238,21 @@ class StyleEngine:
         length_hint = {
             "short": "Один короткий ответ, 1-2 предложения максимум.",
             "medium": "Ответ из 2-3 предложений.",
-            "long": "Можешь дать развёрнутый ответ."
+            "long": "Можешь дать развёрнутый ответ.",
         }
 
         user_prompt = f"""КОНТЕКСТ ДИАЛОГА:
 {context_str}
 
-НОВОЕ СООБЩЕНИЕ от {sender_name or 'пользователя'}:
+НОВОЕ СООБЩЕНИЕ от {sender_name or "пользователя"}:
 {incoming_message}
 
-Ответь в стиле AlphaSnob. {length_hint.get(response_mode, '')}"""
+Ответь в стиле AlphaSnob. {length_hint.get(response_mode, "")}"""
 
         mode_params = {
             "short": {"max_tokens": 50, "temperature": 0.8},
             "medium": {"max_tokens": 150, "temperature": 0.9},
-            "long": {"max_tokens": 500, "temperature": 1.0}
+            "long": {"max_tokens": 500, "temperature": 1.0},
         }
 
         params = mode_params.get(response_mode, mode_params["medium"])
@@ -242,15 +260,17 @@ class StyleEngine:
         try:
             if self.provider == "claude":
                 response = await self._generate_claude(
-                    system_prompt, user_prompt,
+                    system_prompt,
+                    user_prompt,
                     max_tokens=params["max_tokens"],
-                    temperature=params["temperature"]
+                    temperature=params["temperature"],
                 )
             else:
                 response = await self._generate_openai(
-                    system_prompt, user_prompt,
+                    system_prompt,
+                    user_prompt,
                     max_tokens=params["max_tokens"],
-                    temperature=params["temperature"]
+                    temperature=params["temperature"],
                 )
 
             logger.info(f"Generated response ({len(response)} chars, mode: {response_mode})")
@@ -264,8 +284,8 @@ class StyleEngine:
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None
+        max_tokens: int | None = None,
+        temperature: float | None = None,
     ) -> str:
         message = await self.client.messages.create(
             model=self.model,
@@ -273,8 +293,8 @@ class StyleEngine:
             temperature=temperature or self.temperature,
             system=system_prompt,
             messages=[
-                {"role": "user", "content": user_prompt}
-            ]
+                {"role": "user", "content": user_prompt},
+            ],
         )
 
         return message.content[0].text
@@ -283,8 +303,8 @@ class StyleEngine:
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None
+        max_tokens: int | None = None,
+        temperature: float | None = None,
     ) -> str:
         response = await self.client.chat.completions.create(
             model=self.model,
@@ -292,8 +312,8 @@ class StyleEngine:
             temperature=temperature or self.temperature,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
+                {"role": "user", "content": user_prompt},
+            ],
         )
 
         return response.choices[0].message.content
@@ -319,8 +339,8 @@ class StyleEngine:
             "friendly": [
                 "Даже API понимает, что твоя дружелюбность — жалкая попытка манипуляции.",
                 "Мой алгоритм слишком изыскан для этого разговора.",
-            ]
+            ],
         }
 
         templates = fallback_templates.get(tone, fallback_templates["neutral"])
-        return random.choice(templates)
+        return random.choice(templates)  # nosec B311

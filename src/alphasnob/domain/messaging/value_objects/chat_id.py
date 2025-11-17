@@ -34,16 +34,19 @@ class ChatId(ValueObject):
             ValidationError: If chat ID is invalid
         """
         if value == 0:
-            raise ValidationError("Chat ID cannot be zero", chat_id=value)
+            msg = "Chat ID cannot be zero"
+            raise ValidationError(msg, chat_id=value)
 
         # Telegram chat IDs typically don't exceed these ranges
-        if value > 10_000_000_000:
-            raise ValidationError("Chat ID exceeds maximum value", chat_id=value)
+        if value > 10_000_000_000:  # noqa: PLR2004
+            msg = "Chat ID exceeds maximum value"
+            raise ValidationError(msg, chat_id=value)
 
-        if value < -10_000_000_000_000:
-            raise ValidationError("Chat ID below minimum value", chat_id=value)
+        if value < -10_000_000_000_000:  # noqa: PLR2004
+            msg = "Chat ID below minimum value"
+            raise ValidationError(msg, chat_id=value)
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def is_private(self) -> bool:
         """Check if this is a private chat.
@@ -59,7 +62,7 @@ class ChatId(ValueObject):
         Returns:
             True if negative but not supergroup, False otherwise
         """
-        return self.value < 0 and self.value > -1000000000000
+        return self.value < 0 and self.value > -1000000000000  # noqa: PLR2004
 
     def is_supergroup_or_channel(self) -> bool:
         """Check if this is a supergroup or channel.
@@ -67,7 +70,7 @@ class ChatId(ValueObject):
         Returns:
             True if very negative (-100...), False otherwise
         """
-        return self.value <= -1000000000000
+        return self.value <= -1000000000000  # noqa: PLR2004
 
     def __int__(self) -> int:
         """Allow conversion to int."""

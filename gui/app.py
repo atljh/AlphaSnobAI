@@ -4,17 +4,17 @@ Cross-platform desktop application for managing AlphaSnobAI bot.
 Built with PySide6 and QtAsyncio for seamless async/await integration.
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from PySide6.QtWidgets import QApplication
-    from PySide6.QtCore import Qt
     from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
 except ImportError:
     print("ERROR: PySide6 not installed!")
     print("Please install GUI dependencies:")
@@ -22,7 +22,7 @@ except ImportError:
     sys.exit(1)
 
 from gui.main_window import MainWindow
-from gui.themes import ThemeManager, Theme
+from gui.themes import ThemeManager
 
 
 class AlphaSnobApp:
@@ -32,7 +32,7 @@ class AlphaSnobApp:
         """Initialize the application."""
         # Enable high DPI scaling (must be set before creating QApplication)
         QApplication.setHighDpiScaleFactorRoundingPolicy(
-            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough,
         )
 
         # Create Qt application (or get existing instance)
@@ -56,7 +56,6 @@ class AlphaSnobApp:
         # Create main window (pass theme manager)
         self.main_window = MainWindow(self.theme_manager)
 
-
     def run(self):
         """Run the application."""
         self.main_window.show()
@@ -74,6 +73,7 @@ def main():
     except Exception as e:
         print(f"Fatal error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

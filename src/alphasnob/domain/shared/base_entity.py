@@ -5,7 +5,7 @@ They are defined not by their attributes, but by their identity.
 """
 
 from datetime import UTC, datetime
-from typing import Any, ClassVar
+from typing import ClassVar
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,13 +39,15 @@ class Entity(BaseModel):
 
     id: UUID = Field(default_factory=uuid4, description="Unique entity identifier")
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), description="Creation timestamp"
+        default_factory=lambda: datetime.now(UTC),
+        description="Creation timestamp",
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), description="Last update timestamp"
+        default_factory=lambda: datetime.now(UTC),
+        description="Last update timestamp",
     )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Entities are equal if they have the same ID."""
         if not isinstance(other, Entity):
             return False

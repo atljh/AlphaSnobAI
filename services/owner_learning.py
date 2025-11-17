@@ -1,9 +1,8 @@
 import logging
 import re
-from pathlib import Path
-from typing import List, Dict, Optional
-from dataclasses import dataclass
 from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,24 +13,23 @@ class OwnerStyleAnalysis:
     avg_message_length: float
     avg_sentence_length: float
     emoji_frequency: float
-    common_emojis: List[str]
-    common_words: List[str]
-    common_phrases: List[str]
-    punctuation_patterns: Dict[str, int]
+    common_emojis: list[str]
+    common_words: list[str]
+    common_phrases: list[str]
+    punctuation_patterns: dict[str, int]
     formality_score: float
-    language_distribution: Dict[str, float]
+    language_distribution: dict[str, float]
 
     def __repr__(self):
         return f"OwnerStyleAnalysis(messages={self.total_messages}, avg_len={self.avg_message_length:.1f})"
 
 
 class OwnerLearningSystem:
-
     def __init__(self, manual_samples_path: Path, min_samples: int = 50):
         self.manual_samples_path = manual_samples_path
         self.min_samples = min_samples
-        self.samples: List[str] = []
-        self.analysis: Optional[OwnerStyleAnalysis] = None
+        self.samples: list[str] = []
+        self.analysis: OwnerStyleAnalysis | None = None
 
         self._load_samples()
         if len(self.samples) >= self.min_samples:
@@ -43,13 +41,11 @@ class OwnerLearningSystem:
             return
 
         try:
-            with open(self.manual_samples_path, 'r', encoding='utf-8') as f:
+            with open(self.manual_samples_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
             self.samples = [
-                line.strip()
-                for line in lines
-                if line.strip() and not line.strip().startswith('#')
+                line.strip() for line in lines if line.strip() and not line.strip().startswith("#")
             ]
 
             logger.info(f"Loaded {len(self.samples)} owner message samples")
@@ -57,7 +53,7 @@ class OwnerLearningSystem:
             if len(self.samples) < self.min_samples:
                 logger.warning(
                     f"Only {len(self.samples)} samples found, need {self.min_samples} for good learning. "
-                    f"Owner mode will use conservative style."
+                    f"Owner mode will use conservative style.",
                 )
         except Exception as e:
             logger.error(f"Error loading owner samples: {e}")
@@ -72,24 +68,23 @@ class OwnerLearningSystem:
 
         all_sentences = []
         for msg in self.samples:
-            sentences = re.split(r'[.!?]+', msg)
+            sentences = re.split(r"[.!?]+", msg)
             all_sentences.extend([s.strip() for s in sentences if s.strip()])
 
         avg_sentence_length = (
-            sum(len(s.split()) for s in all_sentences) / len(all_sentences)
-            if all_sentences else 0
+            sum(len(s.split()) for s in all_sentences) / len(all_sentences) if all_sentences else 0
         )
 
         emoji_pattern = re.compile(
             "["
-            "\U0001F600-\U0001F64F"
-            "\U0001F300-\U0001F5FF"
-            "\U0001F680-\U0001F6FF"
-            "\U0001F1E0-\U0001F1FF"
-            "\U00002702-\U000027B0"
-            "\U000024C2-\U0001F251"
+            "\U0001f600-\U0001f64f"
+            "\U0001f300-\U0001f5ff"
+            "\U0001f680-\U0001f6ff"
+            "\U0001f1e0-\U0001f1ff"
+            "\U00002702-\U000027b0"
+            "\U000024c2-\U0001f251"
             "]+",
-            flags=re.UNICODE
+            flags=re.UNICODE,
         )
 
         all_emojis = []
@@ -103,10 +98,27 @@ class OwnerLearningSystem:
 
         all_words = []
         for msg in self.samples:
-            words = re.findall(r'\b\w+\b', msg.lower())
+            words = re.findall(r"\b\w+\b", msg.lower())
             all_words.extend(words)
 
-        stop_words = {'и', 'в', 'на', 'с', 'по', 'для', 'не', 'а', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on'}
+        stop_words = {
+            "и",
+            "в",
+            "на",
+            "с",
+            "по",
+            "для",
+            "не",
+            "а",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+        }
         filtered_words = [w for w in all_words if w not in stop_words and len(w) > 2]
 
         word_counter = Counter(filtered_words)
@@ -116,32 +128,30 @@ class OwnerLearningSystem:
         for msg in self.samples:
             words = msg.split()
             for i in range(len(words) - 1):
-                bigrams.append(f"{words[i]} {words[i+1]}")
+                bigrams.append(f"{words[i]} {words[i + 1]}")
 
         bigram_counter = Counter(bigrams)
         common_phrases = [phrase for phrase, _ in bigram_counter.most_common(10)]
 
         punctuation_patterns = {
-            'exclamation_single': sum(msg.count('!') for msg in self.samples if msg.count('!') == 1),
-            'exclamation_multiple': sum(1 for msg in self.samples if msg.count('!') > 1),
-            'question': sum(msg.count('?') for msg in self.samples),
-            'ellipsis': sum(msg.count('...') for msg in self.samples),
-            'caps_usage': sum(1 for msg in self.samples if any(c.isupper() for c in msg))
+            "exclamation_single": sum(
+                msg.count("!") for msg in self.samples if msg.count("!") == 1
+            ),
+            "exclamation_multiple": sum(1 for msg in self.samples if msg.count("!") > 1),
+            "question": sum(msg.count("?") for msg in self.samples),
+            "ellipsis": sum(msg.count("...") for msg in self.samples),
+            "caps_usage": sum(1 for msg in self.samples if any(c.isupper() for c in msg)),
         }
 
-        formal_markers = ['please', 'thank you', 'пожалуйста', 'спасибо', 'would you', 'could you']
-        casual_markers = ['lol', 'лол', 'yeah', 'да', 'nah', 'нет', 'ok', 'ок']
+        formal_markers = ["please", "thank you", "пожалуйста", "спасибо", "would you", "could you"]
+        casual_markers = ["lol", "лол", "yeah", "да", "nah", "нет", "ok", "ок"]
 
         formal_count = sum(
-            1 for msg in self.samples
-            for marker in formal_markers
-            if marker in msg.lower()
+            1 for msg in self.samples for marker in formal_markers if marker in msg.lower()
         )
 
         casual_count = sum(
-            1 for msg in self.samples
-            for marker in casual_markers
-            if marker in msg.lower()
+            1 for msg in self.samples for marker in casual_markers if marker in msg.lower()
         )
 
         formality_score = (
@@ -150,17 +160,17 @@ class OwnerLearningSystem:
             else 0.5
         )
 
-        russian_chars = sum(1 for msg in self.samples for c in msg if '\u0400' <= c <= '\u04FF')
+        russian_chars = sum(1 for msg in self.samples for c in msg if "\u0400" <= c <= "\u04ff")
         english_chars = sum(1 for msg in self.samples for c in msg if c.isalpha() and ord(c) < 128)
         total_alpha = russian_chars + english_chars
 
         if total_alpha > 0:
             language_distribution = {
-                'ru': russian_chars / total_alpha,
-                'en': english_chars / total_alpha
+                "ru": russian_chars / total_alpha,
+                "en": english_chars / total_alpha,
             }
         else:
-            language_distribution = {'ru': 0.5, 'en': 0.5}
+            language_distribution = {"ru": 0.5, "en": 0.5}
 
         self.analysis = OwnerStyleAnalysis(
             total_messages=total_messages,
@@ -172,19 +182,20 @@ class OwnerLearningSystem:
             common_phrases=common_phrases,
             punctuation_patterns=punctuation_patterns,
             formality_score=formality_score,
-            language_distribution=language_distribution
+            language_distribution=language_distribution,
         )
 
         logger.info(f"Owner style analysis complete: {self.analysis}")
 
-    def get_samples(self, n: int = 20) -> List[str]:
+    def get_samples(self, n: int = 20) -> list[str]:
         import random
+
         if not self.samples:
             return []
 
-        return random.sample(self.samples, min(n, len(self.samples)))
+        return random.sample(self.samples, min(n, len(self.samples)))  # nosec B311
 
-    def get_analysis(self) -> Optional[OwnerStyleAnalysis]:
+    def get_analysis(self) -> OwnerStyleAnalysis | None:
         return self.analysis
 
     def has_sufficient_samples(self) -> bool:
@@ -199,8 +210,8 @@ class OwnerLearningSystem:
 - Average message length: {self.analysis.avg_message_length:.1f} characters
 - Average sentence length: {self.analysis.avg_sentence_length:.1f} words
 - Emoji frequency: {self.analysis.emoji_frequency:.2f} per message
-- Common emojis: {', '.join(self.analysis.common_emojis[:5])}
-- Formality: {'Formal' if self.analysis.formality_score > 0.6 else 'Casual' if self.analysis.formality_score < 0.4 else 'Mixed'}
+- Common emojis: {", ".join(self.analysis.common_emojis[:5])}
+- Formality: {"Formal" if self.analysis.formality_score > 0.6 else "Casual" if self.analysis.formality_score < 0.4 else "Mixed"}
 - Language: {max(self.analysis.language_distribution.items(), key=lambda x: x[1])[0].upper()} dominant
 """
         return desc
@@ -219,9 +230,13 @@ class OwnerLearningSystem:
             instructions.append("Owner writes LONG messages (150+ characters)")
 
         if self.analysis.emoji_frequency > 0.5:
-            instructions.append(f"Use emojis FREQUENTLY (especially: {', '.join(self.analysis.common_emojis[:3])})")
+            instructions.append(
+                f"Use emojis FREQUENTLY (especially: {', '.join(self.analysis.common_emojis[:3])})",
+            )
         elif self.analysis.emoji_frequency > 0.2:
-            instructions.append(f"Use emojis occasionally: {', '.join(self.analysis.common_emojis[:3])}")
+            instructions.append(
+                f"Use emojis occasionally: {', '.join(self.analysis.common_emojis[:3])}",
+            )
         else:
             instructions.append("Rarely use emojis")
 
@@ -232,14 +247,16 @@ class OwnerLearningSystem:
         else:
             instructions.append("Mix formal and casual tone")
 
-        if self.analysis.punctuation_patterns.get('exclamation_multiple', 0) > 5:
+        if self.analysis.punctuation_patterns.get("exclamation_multiple", 0) > 5:
             instructions.append("Use multiple exclamation marks!!! for emphasis")
 
-        if self.analysis.punctuation_patterns.get('ellipsis', 0) > 5:
+        if self.analysis.punctuation_patterns.get("ellipsis", 0) > 5:
             instructions.append("Use ellipsis... for pauses")
 
         if self.analysis.common_words:
-            instructions.append(f"Common words to use: {', '.join(self.analysis.common_words[:10])}")
+            instructions.append(
+                f"Common words to use: {', '.join(self.analysis.common_words[:10])}",
+            )
 
         primary_lang = max(self.analysis.language_distribution.items(), key=lambda x: x[1])
         if primary_lang[1] > 0.8:

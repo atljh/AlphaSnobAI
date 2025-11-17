@@ -1,35 +1,35 @@
 """Real-time monitoring with Rich Live display."""
 
 import asyncio
-import psutil
-from pathlib import Path
 from collections import deque
-from datetime import datetime, timedelta
-from typing import Optional, Deque
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
+import psutil
 from rich.console import Console
-from rich.live import Live
-from rich.table import Table
-from rich.panel import Panel
 from rich.layout import Layout
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 
-from utils.log_viewer import LogViewer, LogEntry
+from utils.log_viewer import LogEntry, LogViewer
 from utils.stats_collector import StatsCollector
 
 
 @dataclass
 class MonitorState:
     """Monitor state data."""
+
     start_time: datetime
-    pid: Optional[int]
+    pid: int | None
     messages_count: int
     responses_count: int
-    recent_messages: Deque[str]
-    recent_responses: Deque[str]
-    recent_decisions: Deque[str]
-    recent_logs: Deque[LogEntry]
+    recent_messages: deque[str]
+    recent_responses: deque[str]
+    recent_decisions: deque[str]
+    recent_logs: deque[LogEntry]
 
 
 class BotMonitor:
@@ -40,7 +40,7 @@ class BotMonitor:
         db_path: Path,
         log_path: Path,
         pid_file: Path,
-        update_interval: float = 1.0
+        update_interval: float = 1.0,
     ):
         """Initialize monitor.
 
@@ -67,12 +67,12 @@ class BotMonitor:
             recent_messages=deque(maxlen=10),
             recent_responses=deque(maxlen=10),
             recent_decisions=deque(maxlen=10),
-            recent_logs=deque(maxlen=20)
+            recent_logs=deque(maxlen=20),
         )
 
         self._running = False
 
-    def get_bot_pid(self) -> Optional[int]:
+    def get_bot_pid(self) -> int | None:
         """Get bot process ID.
 
         Returns:
@@ -82,7 +82,7 @@ class BotMonitor:
             return None
 
         try:
-            with open(self.pid_file, 'r') as f:
+            with open(self.pid_file) as f:
                 pid = int(f.read().strip())
 
             # Check if process exists
@@ -93,7 +93,7 @@ class BotMonitor:
         except (ValueError, FileNotFoundError):
             return None
 
-    def get_process_info(self, pid: int) -> Optional[dict]:
+    def get_process_info(self, pid: int) -> dict | None:
         """Get process information.
 
         Args:
@@ -105,10 +105,10 @@ class BotMonitor:
         try:
             process = psutil.Process(pid)
             return {
-                'cpu_percent': process.cpu_percent(),
-                'memory_mb': process.memory_info().rss / (1024 * 1024),
-                'threads': process.num_threads(),
-                'status': process.status()
+                "cpu_percent": process.cpu_percent(),
+                "memory_mb": process.memory_info().rss / (1024 * 1024),
+                "threads": process.num_threads(),
+                "status": process.status(),
             }
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return None
@@ -139,7 +139,7 @@ class BotMonitor:
             if proc_info:
                 table.add_row("CPU", f"{proc_info['cpu_percent']:.1f}%")
                 table.add_row("Memory", f"{proc_info['memory_mb']:.1f} MB")
-                table.add_row("Status", proc_info['status'])
+                table.add_row("Status", proc_info["status"])
         else:
             table.add_row("Status", "[red]Not running[/red]")
 
@@ -225,17 +225,17 @@ class BotMonitor:
         layout.split_column(
             Layout(name="header", size=10),
             Layout(name="body"),
-            Layout(name="footer", size=18)
+            Layout(name="footer", size=18),
         )
 
         layout["header"].split_row(
             Layout(name="status"),
-            Layout(name="messages")
+            Layout(name="messages"),
         )
 
         layout["body"].split_row(
             Layout(name="responses"),
-            Layout(name="decisions")
+            Layout(name="decisions"),
         )
 
         layout["footer"].update(self.create_logs_panel())
@@ -253,7 +253,8 @@ class BotMonitor:
             general_stats = await self.stats_collector.get_general_stats()
             self.state.messages_count = general_stats.total_messages
             self.state.responses_count = general_stats.bot_messages
-        except Exception:
+        except Exception:  # nosec B110
+            # Stats update is non-critical, silently ignore errors
             pass
 
     async def update_logs(self):
@@ -269,15 +270,22 @@ class BotMonitor:
 
                     # Parse special log types
                     if "📨 Message from" in entry.message:
-                        self.state.recent_messages.append(f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}")
+                        self.state.recent_messages.append(
+                            f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}",
+                        )
 
                     elif "📤 Sent response" in entry.message:
-                        self.state.recent_responses.append(f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}")
+                        self.state.recent_responses.append(
+                            f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}",
+                        )
 
                     elif "DecisionEngine" in entry.message or "🎲" in entry.message:
-                        self.state.recent_decisions.append(f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}")
+                        self.state.recent_decisions.append(
+                            f"{entry.timestamp.strftime('%H:%M:%S')} {entry.message}",
+                        )
 
-        except Exception:
+        except Exception:  # nosec B110
+            # Log update is non-critical, silently ignore errors
             pass
 
     async def run(self):

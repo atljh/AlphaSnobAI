@@ -33,13 +33,14 @@ class Temperature(ValueObject):
         Raises:
             ValidationError: If value is out of range
         """
-        if not 0.0 <= value <= 2.0:
+        if not 0.0 <= value <= 2.0:  # noqa: PLR2004
+            msg = "Temperature must be between 0.0 and 2.0"
             raise ValidationError(
-                "Temperature must be between 0.0 and 2.0",
+                msg,
                 value=value,
             )
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def is_conservative(self) -> bool:
         """Check if temperature is conservative (<= 0.3).
@@ -47,7 +48,7 @@ class Temperature(ValueObject):
         Returns:
             True if conservative, False otherwise
         """
-        return self.value <= 0.3
+        return self.value <= 0.3  # noqa: PLR2004
 
     def is_balanced(self) -> bool:
         """Check if temperature is balanced (0.4-0.9).
@@ -55,7 +56,7 @@ class Temperature(ValueObject):
         Returns:
             True if balanced, False otherwise
         """
-        return 0.4 <= self.value <= 0.9
+        return 0.4 <= self.value <= 0.9  # noqa: PLR2004
 
     def is_creative(self) -> bool:
         """Check if temperature is creative (>= 1.0).

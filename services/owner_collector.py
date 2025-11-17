@@ -1,9 +1,9 @@
 """Auto-collection of owner messages for style learning."""
 
 import logging
-from pathlib import Path
-from typing import Set, Optional
 from datetime import datetime
+from pathlib import Path
+
 from config.settings import OwnerLearningConfig
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class OwnerMessageCollector:
         self.config = config
         self.collection_path = Path(config.collection_path)
         self.collected_file = self.collection_path / "messages.txt"
-        self.collected_messages: Set[str] = set()
+        self.collected_messages: set[str] = set()
 
         # Create collection directory
         self.collection_path.mkdir(parents=True, exist_ok=True)
@@ -39,10 +39,10 @@ class OwnerMessageCollector:
             return
 
         try:
-            with open(self.collected_file, 'r', encoding='utf-8') as f:
+            with open(self.collected_file, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#'):
+                    if line and not line.startswith("#"):
                         self.collected_messages.add(line)
             logger.debug(f"Loaded {len(self.collected_messages)} existing messages")
         except Exception as e:
@@ -63,7 +63,7 @@ class OwnerMessageCollector:
         self,
         user_id: int,
         username: str,
-        text: str
+        text: str,
     ) -> bool:
         """Collect owner message if it's new.
 
@@ -93,15 +93,19 @@ class OwnerMessageCollector:
 
         # Collect the message
         try:
-            with open(self.collected_file, 'a', encoding='utf-8') as f:
+            with open(self.collected_file, "a", encoding="utf-8") as f:
                 f.write(f"{text}\n")
 
             self.collected_messages.add(text)
-            logger.info(f"✅ Collected owner message from {username} (total: {len(self.collected_messages)})")
+            logger.info(
+                f"✅ Collected owner message from {username} (total: {len(self.collected_messages)})",
+            )
 
             # Check if we should trigger re-analysis
             if len(self.collected_messages) % 10 == 0:
-                logger.info(f"📊 Milestone reached: {len(self.collected_messages)} messages collected")
+                logger.info(
+                    f"📊 Milestone reached: {len(self.collected_messages)} messages collected",
+                )
 
             return True
 
@@ -116,12 +120,12 @@ class OwnerMessageCollector:
             Dict with collection stats
         """
         return {
-            'total_collected': len(self.collected_messages),
-            'collection_path': str(self.collected_file),
-            'auto_collect_enabled': self.config.auto_collect,
-            'owner_user_ids': self.config.owner_user_ids,
-            'min_samples_required': self.config.min_samples,
-            'has_sufficient_samples': len(self.collected_messages) >= self.config.min_samples
+            "total_collected": len(self.collected_messages),
+            "collection_path": str(self.collected_file),
+            "auto_collect_enabled": self.config.auto_collect,
+            "owner_user_ids": self.config.owner_user_ids,
+            "min_samples_required": self.config.min_samples,
+            "has_sufficient_samples": len(self.collected_messages) >= self.config.min_samples,
         }
 
     def get_all_samples(self) -> list[str]:
@@ -147,14 +151,18 @@ class OwnerMessageCollector:
 
         try:
             # Read auto-collected messages
-            with open(self.collected_file, 'r', encoding='utf-8') as f:
-                auto_messages = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
+            with open(self.collected_file, encoding="utf-8") as f:
+                auto_messages = set(
+                    line.strip() for line in f if line.strip() and not line.startswith("#")
+                )
 
             # Read existing manual messages
             manual_messages = set()
             if manual_samples_path.exists():
-                with open(manual_samples_path, 'r', encoding='utf-8') as f:
-                    manual_messages = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
+                with open(manual_samples_path, encoding="utf-8") as f:
+                    manual_messages = set(
+                        line.strip() for line in f if line.strip() and not line.startswith("#")
+                    )
 
             # Find new messages to add
             new_messages = auto_messages - manual_messages
@@ -164,7 +172,7 @@ class OwnerMessageCollector:
                 return 0
 
             # Append new messages to manual samples
-            with open(manual_samples_path, 'a', encoding='utf-8') as f:
+            with open(manual_samples_path, "a", encoding="utf-8") as f:
                 f.write(f"\n# Auto-collected on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                 for msg in sorted(new_messages):
                     f.write(f"{msg}\n")

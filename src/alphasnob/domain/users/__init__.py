@@ -7,10 +7,10 @@ from alphasnob.domain.users.value_objects.trust_score import TrustScore
 from alphasnob.domain.users.value_objects.user_id import UserId
 
 __all__ = [
-    "User",
-    "UserProfile",
-    "UserId",
     "Relationship",
     "RelationshipLevel",
     "TrustScore",
+    "User",
+    "UserId",
+    "UserProfile",
 ]

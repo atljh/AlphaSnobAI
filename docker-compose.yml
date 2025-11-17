@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  alphasnob:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alphasnob:v3.0.0
+    container_name: alphasnob-bot
+    restart: unless-stopped
+
+    # Environment variables
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ALPHASNOB_DEBUG=false
+
+    # Volumes for persistent data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config:ro  # Read-only config
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network
+    networks:
+      - alphasnob-network
+
+  # Optional: GUI service (if needed)
+  alphasnob-gui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alphasnob:v3.0.0
+    container_name: alphasnob-gui
+    restart: unless-stopped
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DISPLAY=${DISPLAY}
+
+    volumes:
+      - ./data:/app/data:ro  # Read-only data access
+      - ./logs:/app/logs:ro  # Read-only logs
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+    command: ["alphasnob-gui"]
+
+    networks:
+      - alphasnob-network
+
+    profiles:
+      - gui
+
+networks:
+  alphasnob-network:
+    driver: bridge

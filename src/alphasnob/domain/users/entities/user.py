@@ -1,6 +1,3 @@
-from datetime import datetime
-from typing import Optional
-
 from alphasnob.domain.shared.base_entity import Entity
 from alphasnob.domain.users.value_objects.user_id import UserId
 
@@ -32,11 +29,11 @@ class User(Entity):
     """
 
     user_id: UserId
-    username: Optional[str] = None
+    username: str | None = None
     first_name: str
-    last_name: Optional[str] = None
+    last_name: str | None = None
     is_bot: bool = False
-    language_code: Optional[str] = None
+    language_code: str | None = None
 
     def full_name(self) -> str:
         """Get user's full name.
@@ -60,10 +57,10 @@ class User(Entity):
 
     def update_info(
         self,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        language_code: Optional[str] = None,
+        username: str | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        language_code: str | None = None,
     ) -> None:
         """Update user information.
 

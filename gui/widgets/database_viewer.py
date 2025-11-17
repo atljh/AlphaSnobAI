@@ -4,28 +4,35 @@ Provides interface for viewing messages, user profiles, topics, and response his
 with filtering, search, and export capabilities.
 """
 
-import sys
 import asyncio
-from pathlib import Path
+import sys
 from datetime import datetime
-from typing import List, Dict, Any
+from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-    QPushButton, QLabel, QMessageBox, QTableWidget,
-    QTableWidgetItem, QLineEdit, QComboBox, QHeaderView,
-    QGroupBox, QFormLayout, QTextEdit, QFileDialog,
-    QProgressDialog, QDateEdit
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, QDate, Signal
-from PySide6.QtGui import QFont
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from config.settings import get_settings
 from utils.db_manager import DatabaseManager
 from utils.stats_collector import StatsCollector
-from config.settings import get_settings
 
 
 class DatabaseViewerWidget(QWidget):
@@ -78,13 +85,15 @@ class DatabaseViewerWidget(QWidget):
 
         # Title
         title = QLabel("Database Viewer")
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 24px;
                 font-weight: 700;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         header_layout.addWidget(title)
 
         # Stats row
@@ -93,11 +102,15 @@ class DatabaseViewerWidget(QWidget):
         stats_layout.setSpacing(24)
 
         self.total_messages_label = QLabel("Messages: --")
-        self.total_messages_label.setStyleSheet("font-size: 14px; color: #cbd5e1; font-weight: 600;")
+        self.total_messages_label.setStyleSheet(
+            "font-size: 14px; color: #cbd5e1; font-weight: 600;",
+        )
         stats_layout.addWidget(self.total_messages_label)
 
         self.total_profiles_label = QLabel("Profiles: --")
-        self.total_profiles_label.setStyleSheet("font-size: 14px; color: #cbd5e1; font-weight: 600;")
+        self.total_profiles_label.setStyleSheet(
+            "font-size: 14px; color: #cbd5e1; font-weight: 600;",
+        )
         stats_layout.addWidget(self.total_profiles_label)
 
         self.total_topics_label = QLabel("Topics: --")
@@ -114,7 +127,8 @@ class DatabaseViewerWidget(QWidget):
         refresh_btn = QPushButton("Refresh")
         refresh_btn.setMinimumHeight(32)
         refresh_btn.setCursor(Qt.PointingHandCursor)
-        refresh_btn.setStyleSheet("""
+        refresh_btn.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -135,7 +149,8 @@ class DatabaseViewerWidget(QWidget):
                     stop:1 #7c3aed
                 );
             }
-        """)
+        """,
+        )
         refresh_btn.clicked.connect(self._load_database_stats)
         stats_layout.addWidget(refresh_btn)
 
@@ -190,9 +205,17 @@ class DatabaseViewerWidget(QWidget):
         # Table
         self.messages_table = QTableWidget()
         self.messages_table.setColumnCount(7)
-        self.messages_table.setHorizontalHeaderLabels([
-            "ID", "Chat ID", "User ID", "Username", "Text", "Timestamp", "Persona"
-        ])
+        self.messages_table.setHorizontalHeaderLabels(
+            [
+                "ID",
+                "Chat ID",
+                "User ID",
+                "Username",
+                "Text",
+                "Timestamp",
+                "Persona",
+            ],
+        )
         self.messages_table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.messages_table.horizontalHeader().setStretchLastSection(False)
         self.messages_table.verticalHeader().setVisible(False)
@@ -220,9 +243,16 @@ class DatabaseViewerWidget(QWidget):
         # Relationship filter
         filters_layout.addWidget(QLabel("Relationship:"))
         self.profile_relationship_filter = QComboBox()
-        self.profile_relationship_filter.addItems([
-            "All", "owner", "close_friend", "friend", "acquaintance", "stranger"
-        ])
+        self.profile_relationship_filter.addItems(
+            [
+                "All",
+                "owner",
+                "close_friend",
+                "friend",
+                "acquaintance",
+                "stranger",
+            ],
+        )
         filters_layout.addWidget(self.profile_relationship_filter)
 
         filters_layout.addStretch()
@@ -238,10 +268,17 @@ class DatabaseViewerWidget(QWidget):
         # Table
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(7)
-        self.profiles_table.setHorizontalHeaderLabels([
-            "User ID", "Username", "Name", "Relationship", "Trust Score",
-            "Interactions", "Last Interaction"
-        ])
+        self.profiles_table.setHorizontalHeaderLabels(
+            [
+                "User ID",
+                "Username",
+                "Name",
+                "Relationship",
+                "Trust Score",
+                "Interactions",
+                "Last Interaction",
+            ],
+        )
         self.profiles_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.profiles_table.verticalHeader().setVisible(False)
         self.profiles_table.setAlternatingRowColors(True)
@@ -260,9 +297,16 @@ class DatabaseViewerWidget(QWidget):
         # Table
         self.topics_table = QTableWidget()
         self.topics_table.setColumnCount(6)
-        self.topics_table.setHorizontalHeaderLabels([
-            "Chat ID", "Topic", "Confidence", "Persona", "Mentions", "Last Mentioned"
-        ])
+        self.topics_table.setHorizontalHeaderLabels(
+            [
+                "Chat ID",
+                "Topic",
+                "Confidence",
+                "Persona",
+                "Mentions",
+                "Last Mentioned",
+            ],
+        )
         self.topics_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.topics_table.verticalHeader().setVisible(False)
         self.topics_table.setAlternatingRowColors(True)
@@ -291,10 +335,17 @@ class DatabaseViewerWidget(QWidget):
         # Table
         self.response_history_table = QTableWidget()
         self.response_history_table.setColumnCount(7)
-        self.response_history_table.setHorizontalHeaderLabels([
-            "Chat ID", "User ID", "Should Respond", "Reason", "Persona",
-            "Total Delay (ms)", "Timestamp"
-        ])
+        self.response_history_table.setHorizontalHeaderLabels(
+            [
+                "Chat ID",
+                "User ID",
+                "Should Respond",
+                "Reason",
+                "Persona",
+                "Total Delay (ms)",
+                "Timestamp",
+            ],
+        )
         self.response_history_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.response_history_table.verticalHeader().setVisible(False)
         self.response_history_table.setAlternatingRowColors(True)
@@ -334,7 +385,7 @@ class DatabaseViewerWidget(QWidget):
             "Create a backup of the database",
             "#6366f1",
             "#8b5cf6",
-            self._on_backup_clicked
+            self._on_backup_clicked,
         )
         tools_layout.addWidget(backup_btn)
 
@@ -344,7 +395,7 @@ class DatabaseViewerWidget(QWidget):
             "Restore database from a backup file",
             "#f59e0b",
             "#f97316",
-            self._on_restore_clicked
+            self._on_restore_clicked,
         )
         tools_layout.addWidget(restore_btn)
 
@@ -354,7 +405,7 @@ class DatabaseViewerWidget(QWidget):
             "Optimize database size and performance",
             "#10b981",
             "#06b6d4",
-            self._on_vacuum_clicked
+            self._on_vacuum_clicked,
         )
         tools_layout.addWidget(vacuum_btn)
 
@@ -364,7 +415,7 @@ class DatabaseViewerWidget(QWidget):
             "Verify database integrity",
             "#8b5cf6",
             "#ec4899",
-            self._on_integrity_check_clicked
+            self._on_integrity_check_clicked,
         )
         tools_layout.addWidget(integrity_btn)
 
@@ -374,7 +425,7 @@ class DatabaseViewerWidget(QWidget):
             "Delete messages older than specified date",
             "#ef4444",
             "#f59e0b",
-            self._on_clean_old_clicked
+            self._on_clean_old_clicked,
         )
         tools_layout.addWidget(clean_btn)
 
@@ -383,8 +434,14 @@ class DatabaseViewerWidget(QWidget):
 
         return widget
 
-    def _create_tool_button(self, title: str, description: str,
-                           color1: str, color2: str, callback) -> QWidget:
+    def _create_tool_button(
+        self,
+        title: str,
+        description: str,
+        color1: str,
+        color2: str,
+        callback,
+    ) -> QWidget:
         """Create a styled tool button."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
@@ -394,7 +451,8 @@ class DatabaseViewerWidget(QWidget):
         button = QPushButton(title)
         button.setMinimumHeight(48)
         button.setCursor(Qt.PointingHandCursor)
-        button.setStyleSheet(f"""
+        button.setStyleSheet(
+            f"""
             QPushButton {{
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -412,7 +470,8 @@ class DatabaseViewerWidget(QWidget):
             QPushButton:hover {{
                 opacity: 0.9;
             }}
-        """)
+        """,
+        )
         button.clicked.connect(callback)
 
         desc_label = QLabel(description)
@@ -434,7 +493,7 @@ class DatabaseViewerWidget(QWidget):
             self.total_topics_label.setText(f"Topics: {stats.get('topic_count', 0)}")
 
             # Format file size
-            size_bytes = stats.get('file_size', 0)
+            size_bytes = stats.get("file_size", 0)
             if size_bytes < 1024:
                 size_str = f"{size_bytes} B"
             elif size_bytes < 1024 * 1024:
@@ -456,7 +515,9 @@ class DatabaseViewerWidget(QWidget):
             search_text = self.msg_search.text().strip()
 
             # Build query
-            query = "SELECT id, chat_id, user_id, username, text, timestamp, persona_mode FROM messages"
+            query = (
+                "SELECT id, chat_id, user_id, username, text, timestamp, persona_mode FROM messages"
+            )
             params = []
             conditions = []
 
@@ -599,7 +660,7 @@ class DatabaseViewerWidget(QWidget):
             self,
             "Create Backup",
             f"alphasnob_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db",
-            "Database Files (*.db);;All Files (*)"
+            "Database Files (*.db);;All Files (*)",
         )
 
         if filename:
@@ -608,7 +669,7 @@ class DatabaseViewerWidget(QWidget):
                 QMessageBox.information(
                     self,
                     "Success",
-                    f"Database backup created successfully:\n{filename}"
+                    f"Database backup created successfully:\n{filename}",
                 )
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Backup failed:\n{e}")
@@ -621,7 +682,7 @@ class DatabaseViewerWidget(QWidget):
             "Restoring from backup will replace the current database.\n\n"
             "Are you sure you want to continue?",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
@@ -629,7 +690,7 @@ class DatabaseViewerWidget(QWidget):
                 self,
                 "Select Backup File",
                 "",
-                "Database Files (*.db);;All Files (*)"
+                "Database Files (*.db);;All Files (*)",
             )
 
             if filename:
@@ -657,13 +718,13 @@ class DatabaseViewerWidget(QWidget):
                 QMessageBox.information(
                     self,
                     "Integrity Check",
-                    "Database integrity check passed!\n\nNo issues found."
+                    "Database integrity check passed!\n\nNo issues found.",
                 )
             else:
                 QMessageBox.warning(
                     self,
                     "Integrity Check",
-                    "Database integrity check found issues!\n\nConsider restoring from backup."
+                    "Database integrity check found issues!\n\nConsider restoring from backup.",
                 )
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Integrity check failed:\n{e}")
@@ -674,5 +735,5 @@ class DatabaseViewerWidget(QWidget):
         QMessageBox.information(
             self,
             "Coming Soon",
-            "Clean old messages functionality will be implemented soon."
+            "Clean old messages functionality will be implemented soon.",
         )

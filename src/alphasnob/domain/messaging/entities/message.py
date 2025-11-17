@@ -1,7 +1,6 @@
 """Message entity - represents a Telegram message."""
 
 from datetime import datetime
-from typing import Optional
 
 from alphasnob.domain.messaging.value_objects.chat_id import ChatId
 from alphasnob.domain.messaging.value_objects.message_content import MessageContent
@@ -42,17 +41,17 @@ class Message(Entity):
     chat_id: ChatId
     user_id: UserId
     content: MessageContent
-    username: Optional[str] = None
+    username: str | None = None
     timestamp: datetime
 
     # Bot-specific fields
     is_from_bot: bool = False
-    persona_mode: Optional[str] = None
-    response_delay_ms: Optional[int] = None
-    decision_score: Optional[float] = None
+    persona_mode: str | None = None
+    response_delay_ms: int | None = None
+    decision_score: float | None = None
 
     # Reply chain
-    replied_to_id: Optional[int] = None
+    replied_to_id: int | None = None
 
     def is_reply(self) -> bool:
         """Check if this message is a reply to another message.

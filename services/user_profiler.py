@@ -1,11 +1,10 @@
-import aiosqlite
-import logging
 import json
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, List
+import logging
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
+import aiosqlite
 from config.settings import ProfilingConfig
 
 logger = logging.getLogger(__name__)
@@ -15,16 +14,16 @@ logger = logging.getLogger(__name__)
 class UserProfile:
     user_id: int
     username: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    relationship_level: str = 'stranger'
+    first_name: str | None = None
+    last_name: str | None = None
+    relationship_level: str = "stranger"
     trust_score: float = 0.0
     interaction_count: int = 0
-    notes: Optional[str] = None
-    detected_topics: List[str] = None
-    preferred_persona: Optional[str] = None
-    first_interaction: Optional[datetime] = None
-    last_interaction: Optional[datetime] = None
+    notes: str | None = None
+    detected_topics: list[str] = None
+    preferred_persona: str | None = None
+    first_interaction: datetime | None = None
+    last_interaction: datetime | None = None
     avg_response_time_ms: int = 0
 
     def __post_init__(self):
@@ -32,11 +31,12 @@ class UserProfile:
             self.detected_topics = []
 
     def __repr__(self):
-        return f"UserProfile({self.username}, {self.relationship_level}, trust={self.trust_score:.2f})"
+        return (
+            f"UserProfile({self.username}, {self.relationship_level}, trust={self.trust_score:.2f})"
+        )
 
 
 class UserProfiler:
-
     def __init__(self, db_path: Path, profiling_config: ProfilingConfig):
         self.db_path = db_path
         self.config = profiling_config
@@ -48,7 +48,8 @@ class UserProfiler:
             return
 
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS user_profiles (
                     user_id INTEGER PRIMARY KEY,
                     username TEXT,
@@ -66,13 +67,14 @@ class UserProfiler:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """,
+            )
 
             await db.execute(
-                "CREATE INDEX IF NOT EXISTS idx_relationship ON user_profiles(relationship_level)"
+                "CREATE INDEX IF NOT EXISTS idx_relationship ON user_profiles(relationship_level)",
             )
             await db.execute(
-                "CREATE INDEX IF NOT EXISTS idx_last_interaction ON user_profiles(last_interaction)"
+                "CREATE INDEX IF NOT EXISTS idx_last_interaction ON user_profiles(last_interaction)",
             )
 
             await db.commit()
@@ -89,71 +91,93 @@ class UserProfiler:
 
             async with db.execute(
                 "SELECT * FROM user_profiles WHERE user_id = ?",
-                (user_id,)
+                (user_id,),
             ) as cursor:
                 row = await cursor.fetchone()
 
             if row:
-                detected_topics = json.loads(row['detected_topics']) if row['detected_topics'] else []
+                detected_topics = (
+                    json.loads(row["detected_topics"]) if row["detected_topics"] else []
+                )
 
                 return UserProfile(
-                    user_id=row['user_id'],
-                    username=row['username'],
-                    first_name=row['first_name'],
-                    last_name=row['last_name'],
-                    relationship_level=row['relationship_level'],
-                    trust_score=row['trust_score'],
-                    interaction_count=row['interaction_count'],
-                    notes=row['notes'],
+                    user_id=row["user_id"],
+                    username=row["username"],
+                    first_name=row["first_name"],
+                    last_name=row["last_name"],
+                    relationship_level=row["relationship_level"],
+                    trust_score=row["trust_score"],
+                    interaction_count=row["interaction_count"],
+                    notes=row["notes"],
                     detected_topics=detected_topics,
-                    preferred_persona=row['preferred_persona'],
+                    preferred_persona=row["preferred_persona"],
                     first_interaction=(
-                        datetime.fromisoformat(row['first_interaction'])
-                        if row['first_interaction'] else None
+                        datetime.fromisoformat(row["first_interaction"])
+                        if row["first_interaction"]
+                        else None
                     ),
                     last_interaction=(
-                        datetime.fromisoformat(row['last_interaction'])
-                        if row['last_interaction'] else None
+                        datetime.fromisoformat(row["last_interaction"])
+                        if row["last_interaction"]
+                        else None
                     ),
-                    avg_response_time_ms=row['avg_response_time_ms']
+                    avg_response_time_ms=row["avg_response_time_ms"],
                 )
-            else:
-                now = datetime.now()
-                await db.execute(
-                    """
+            now = datetime.now()
+            await db.execute(
+                """
                     INSERT INTO user_profiles (
                         user_id, username, first_interaction, last_interaction
                     ) VALUES (?, ?, ?, ?)
                     """,
-                    (user_id, username, now.isoformat(), now.isoformat())
-                )
-                await db.commit()
+                (user_id, username, now.isoformat(), now.isoformat()),
+            )
+            await db.commit()
 
-                logger.info(f"Created new profile for user {username} ({user_id})")
+            logger.info(f"Created new profile for user {username} ({user_id})")
 
-                return UserProfile(
-                    user_id=user_id,
-                    username=username,
-                    first_interaction=now,
-                    last_interaction=now
-                )
+            return UserProfile(
+                user_id=user_id,
+                username=username,
+                first_interaction=now,
+                last_interaction=now,
+            )
 
     async def update_profile(self, user_id: int, **kwargs):
         if not self._initialized:
             await self.initialize()
 
-        if 'detected_topics' in kwargs and isinstance(kwargs['detected_topics'], list):
-            kwargs['detected_topics'] = json.dumps(kwargs['detected_topics'])
+        if "detected_topics" in kwargs and isinstance(kwargs["detected_topics"], list):
+            kwargs["detected_topics"] = json.dumps(kwargs["detected_topics"])
 
         if not kwargs:
             return
 
-        set_clauses = ', '.join(f"{key} = ?" for key in kwargs.keys())
+        # Whitelist of allowed column names to prevent SQL injection
+        allowed_columns = {
+            "username",
+            "first_name",
+            "last_name",
+            "relationship_level",
+            "trust_score",
+            "interaction_count",
+            "positive_interactions",
+            "preferred_persona",
+            "detected_topics",
+            "last_interaction",
+        }
+
+        # Filter to only allowed columns
+        safe_kwargs = {k: v for k, v in kwargs.items() if k in allowed_columns}
+        if not safe_kwargs:
+            return
+
+        set_clauses = ", ".join(f"{key} = ?" for key in safe_kwargs)
         set_clauses += ", updated_at = CURRENT_TIMESTAMP"
 
-        values = list(kwargs.values()) + [user_id]
+        values = list(safe_kwargs.values()) + [user_id]
 
-        query = f"UPDATE user_profiles SET {set_clauses} WHERE user_id = ?"
+        query = f"UPDATE user_profiles SET {set_clauses} WHERE user_id = ?"  # nosec B608
 
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute(query, values)
@@ -175,7 +199,7 @@ class UserProfiler:
                     last_interaction = ?
                 WHERE user_id = ?
                 """,
-                (now, user_id)
+                (now, user_id),
             )
             await db.commit()
 
@@ -197,7 +221,7 @@ class UserProfiler:
                 END
                 WHERE user_id = ?
                 """,
-                (delta, delta, delta, user_id)
+                (delta, delta, delta, user_id),
             )
             await db.commit()
 
@@ -210,13 +234,11 @@ class UserProfiler:
         message_lower = message.lower()
 
         positive_count = sum(
-            1 for marker in self.config.trust_adjustment.positive_markers
-            if marker in message_lower
+            1 for marker in self.config.trust_adjustment.positive_markers if marker in message_lower
         )
 
         negative_count = sum(
-            1 for marker in self.config.trust_adjustment.negative_markers
-            if marker in message_lower
+            1 for marker in self.config.trust_adjustment.negative_markers if marker in message_lower
         )
 
         if positive_count > 0:
@@ -236,11 +258,11 @@ class UserProfiler:
         count = profile.interaction_count
 
         if count >= self.config.auto_upgrade.friend_to_close_friend:
-            new_level = 'close_friend'
+            new_level = "close_friend"
         elif count >= self.config.auto_upgrade.acquaintance_to_friend:
-            new_level = 'friend'
+            new_level = "friend"
         elif count >= self.config.auto_upgrade.stranger_to_acquaintance:
-            new_level = 'acquaintance'
+            new_level = "acquaintance"
 
         if new_level != old_level:
             await self.update_profile(user_id, relationship_level=new_level)
@@ -264,7 +286,7 @@ class UserProfiler:
 - Relationship: {profile.relationship_level}
 - Trust: {profile.trust_score:+.2f}
 - Interactions: {profile.interaction_count}
-- Topics: {', '.join(profile.detected_topics[:5]) if profile.detected_topics else 'None'}
-- Preferred persona: {profile.preferred_persona or 'Default'}
+- Topics: {", ".join(profile.detected_topics[:5]) if profile.detected_topics else "None"}
+- Preferred persona: {profile.preferred_persona or "Default"}
 """
         return summary

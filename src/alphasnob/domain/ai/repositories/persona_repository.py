@@ -1,6 +1,6 @@
 """Persona repository interface (port)."""
 
-from typing import Optional, Protocol
+from typing import Protocol
 from uuid import UUID
 
 from alphasnob.domain.ai.entities.persona import Persona
@@ -17,18 +17,18 @@ class PersonaRepository(Protocol):
     Infrastructure layer decides implementation strategy.
     """
 
-    async def get_by_id(self, id: UUID) -> Optional[Persona]:
+    async def get_by_id(self, persona_id: UUID) -> Persona | None:
         """Get persona by internal UUID.
 
         Args:
-            id: Internal entity UUID
+            persona_id: Internal entity UUID
 
         Returns:
             Persona if found, None otherwise
         """
         ...
 
-    async def get_by_name(self, name: str) -> Optional[Persona]:
+    async def get_by_name(self, name: str) -> Persona | None:
         """Get persona by name.
 
         Args:

@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Development-specific docker-compose configuration
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  alphasnob:
+    # Override build to enable development mode
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for development tools
+
+    # Mount source code for hot reload
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - ./tests:/app/tests:ro
+
+    # Override environment for development
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ALPHASNOB_DEBUG=true
+      - LOG_LEVEL=DEBUG
+
+    # Override command for interactive development
+    command: ["alphasnob", "start", "--interactive"]
+
+    # Allow debugging
+    stdin_open: true
+    tty: true
+
+    # Resource limits (more relaxed for dev)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # Development database browser (optional)
+  db-browser:
+    image: coleifer/sqlite-web
+    container_name: alphasnob-db-browser
+    restart: unless-stopped
+
+    volumes:
+      - ./data:/data:ro
+
+    ports:
+      - "8080:8080"
+
+    command: ["-H", "0.0.0.0", "-x", "/data/context.db"]
+
+    networks:
+      - alphasnob-network
+
+    profiles:
+      - dev-tools
+
+networks:
+  alphasnob-network:
+    driver: bridge

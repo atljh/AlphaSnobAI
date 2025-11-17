@@ -219,6 +219,13 @@ module = [
     "qdarkstyle.*",
     "qtawesome.*",
     "pyqtgraph.*",
+    "rich.*",
+    "typer.*",
+    "aiosqlite.*",
+    "returns.*",
+    "dependency_injector.*",
+    "PySide6.*",
+    "pydantic_settings.*",
 ]
 ignore_missing_imports = true
 
@@ -296,3 +303,9 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+# ============================================================================
+# BANDIT - Security linting
+# ============================================================================
+[tool.bandit]
+skips = ["B311", "B110"]  # Skip random usage and try-except-pass (non-critical operations)

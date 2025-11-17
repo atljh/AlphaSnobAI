@@ -1,5 +1,7 @@
 """Probability value object."""
 
+from __future__ import annotations
+
 from alphasnob.domain.shared.base_value_object import ValueObject
 from alphasnob.domain.shared.errors import ValidationError
 
@@ -31,12 +33,13 @@ class Probability(ValueObject):
             ValidationError: If value is out of range
         """
         if not 0.0 <= value <= 1.0:
+            msg = "Probability must be between 0.0 and 1.0"
             raise ValidationError(
-                "Probability must be between 0.0 and 1.0",
+                msg,
                 value=value,
             )
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def is_certain(self) -> bool:
         """Check if probability is 1.0 (certain).
@@ -60,9 +63,9 @@ class Probability(ValueObject):
         Returns:
             True if value > 0.5, False otherwise
         """
-        return self.value > 0.5
+        return self.value > 0.5  # noqa: PLR2004
 
-    def complement(self) -> "Probability":
+    def complement(self) -> Probability:
         """Get complement probability (1 - p).
 
         Returns:
@@ -74,7 +77,7 @@ class Probability(ValueObject):
         """
         return Probability(1.0 - self.value)
 
-    def multiply(self, other: "Probability" | float) -> "Probability":
+    def multiply(self, other: Probability | float) -> Probability:
         """Multiply with another probability.
 
         Args:
@@ -88,10 +91,7 @@ class Probability(ValueObject):
             p2 = Probability(0.5)
             p1.multiply(p2)  # Probability(0.4)
         """
-        if isinstance(other, Probability):
-            value = self.value * other.value
-        else:
-            value = self.value * other
+        value = self.value * other.value if isinstance(other, Probability) else self.value * other
 
         # Clamp to valid range
         value = max(0.0, min(1.0, value))

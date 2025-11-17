@@ -4,20 +4,28 @@ Displays bot logs in real-time with color coding and filtering options.
 """
 
 import sys
-from pathlib import Path
 from collections import deque
+from pathlib import Path
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTextEdit,
-    QPushButton, QComboBox, QLineEdit, QLabel, QCheckBox
-)
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont
+from PySide6.QtGui import QColor, QFont, QTextCharFormat, QTextCursor
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from config.settings import get_settings
+
 from gui.backend.bot_process import BotProcessManager
 
 
@@ -65,11 +73,13 @@ class LogViewerWidget(QWidget):
         # Toolbar with glass styling
         toolbar = QWidget()
         toolbar.setObjectName("glassCard")
-        toolbar.setStyleSheet("""
+        toolbar.setStyleSheet(
+            """
             QWidget#glassCard {
                 padding: 12px;
             }
-        """)
+        """,
+        )
         toolbar_layout = QHBoxLayout(toolbar)
         toolbar_layout.setSpacing(12)
 
@@ -107,7 +117,8 @@ class LogViewerWidget(QWidget):
         clear_button = QPushButton("Clear")
         clear_button.setMinimumHeight(36)
         clear_button.setCursor(Qt.PointingHandCursor)
-        clear_button.setStyleSheet("""
+        clear_button.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -128,7 +139,8 @@ class LogViewerWidget(QWidget):
                     stop:1 #d97706
                 );
             }
-        """)
+        """,
+        )
         clear_button.clicked.connect(self._on_clear_clicked)
         toolbar_layout.addWidget(clear_button)
 
@@ -136,7 +148,8 @@ class LogViewerWidget(QWidget):
         export_button = QPushButton("Export")
         export_button.setMinimumHeight(36)
         export_button.setCursor(Qt.PointingHandCursor)
-        export_button.setStyleSheet("""
+        export_button.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -157,7 +170,8 @@ class LogViewerWidget(QWidget):
                     stop:1 #7c3aed
                 );
             }
-        """)
+        """,
+        )
         export_button.clicked.connect(self._on_export_clicked)
         toolbar_layout.addWidget(export_button)
 
@@ -176,7 +190,7 @@ class LogViewerWidget(QWidget):
         try:
             log_file = Path(self.settings.paths.logs)
             if log_file.exists():
-                with open(log_file, 'r', encoding='utf-8') as f:
+                with open(log_file, encoding="utf-8") as f:
                     lines = f.readlines()
                     # Get last 100 lines
                     for line in lines[-100:]:
@@ -193,7 +207,7 @@ class LogViewerWidget(QWidget):
             if not log_file.exists():
                 return
 
-            with open(log_file, 'r', encoding='utf-8') as f:
+            with open(log_file, encoding="utf-8") as f:
                 # Seek to last known position
                 f.seek(self.last_file_position)
 
@@ -204,7 +218,7 @@ class LogViewerWidget(QWidget):
                 # Update position
                 self.last_file_position = f.tell()
 
-        except Exception as e:
+        except Exception:
             # Silently ignore errors (file might be locked)
             pass
 
@@ -241,16 +255,15 @@ class LogViewerWidget(QWidget):
         line_upper = line.upper()
         if "[ERROR]" in line_upper or "ERROR:" in line_upper:
             return "ERROR"
-        elif "[WARNING]" in line_upper or "WARNING:" in line_upper:
+        if "[WARNING]" in line_upper or "WARNING:" in line_upper:
             return "WARNING"
-        elif "[SUCCESS]" in line_upper or "SUCCESS:" in line_upper:
+        if "[SUCCESS]" in line_upper or "SUCCESS:" in line_upper:
             return "SUCCESS"
-        elif "[DEBUG]" in line_upper or "DEBUG:" in line_upper:
+        if "[DEBUG]" in line_upper or "DEBUG:" in line_upper:
             return "DEBUG"
-        elif "[INFO]" in line_upper or "INFO:" in line_upper:
+        if "[INFO]" in line_upper or "INFO:" in line_upper:
             return "INFO"
-        else:
-            return "INFO"
+        return "INFO"
 
     def _append_colored_line(self, line: str, level: str):
         """Append line with modern neon color formatting."""
@@ -262,11 +275,11 @@ class LogViewerWidget(QWidget):
 
         # Modern vibrant neon colors
         colors = {
-            "ERROR": QColor(239, 68, 68),        # #ef4444 - Bright Red
-            "WARNING": QColor(245, 158, 11),     # #f59e0b - Bright Orange
-            "SUCCESS": QColor(16, 185, 129),     # #10b981 - Bright Green
-            "INFO": QColor(99, 102, 241),        # #6366f1 - Bright Indigo
-            "DEBUG": QColor(148, 163, 184),      # #94a3b8 - Light Gray
+            "ERROR": QColor(239, 68, 68),  # #ef4444 - Bright Red
+            "WARNING": QColor(245, 158, 11),  # #f59e0b - Bright Orange
+            "SUCCESS": QColor(16, 185, 129),  # #10b981 - Bright Green
+            "INFO": QColor(99, 102, 241),  # #6366f1 - Bright Indigo
+            "DEBUG": QColor(148, 163, 184),  # #94a3b8 - Light Gray
         }
 
         fmt.setForeground(colors.get(level, QColor(203, 213, 225)))
@@ -311,7 +324,7 @@ class LogViewerWidget(QWidget):
 
     def _on_autoscroll_toggled(self, state):
         """Handle autoscroll toggle."""
-        self.autoscroll_enabled = (state == Qt.Checked)
+        self.autoscroll_enabled = state == Qt.Checked
 
     def _on_clear_clicked(self):
         """Handle clear button click."""
@@ -320,19 +333,20 @@ class LogViewerWidget(QWidget):
 
     def _on_export_clicked(self):
         """Handle export button click."""
-        from PySide6.QtWidgets import QFileDialog
         from datetime import datetime
+
+        from PySide6.QtWidgets import QFileDialog
 
         filename, _ = QFileDialog.getSaveFileName(
             self,
             "Export Logs",
             f"logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-            "Text Files (*.txt);;All Files (*)"
+            "Text Files (*.txt);;All Files (*)",
         )
 
         if filename:
             try:
-                with open(filename, 'w', encoding='utf-8') as f:
+                with open(filename, "w", encoding="utf-8") as f:
                     f.write(self.log_text.toPlainText())
 
                 self._add_log_line(f"[SUCCESS] Logs exported to {filename}", force=True)

@@ -4,24 +4,24 @@
 This file is called by the daemon manager. For CLI interface, use cli.py instead.
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config.settings import get_settings
-from services.memory import Memory
-from services.style import StyleEngine
-from services.persona_manager import PersonaManager
-from services.owner_learning import OwnerLearningSystem
-from services.typing_simulator import TypingSimulator
-from services.user_profiler import UserProfiler
-from services.decision_engine import DecisionEngine
-from utils.language_detector import LanguageDetector
-from bot.handlers import MessageHandler
 from bot.client import AlphaSnobClient
 from bot.daemon import setup_signal_handlers
+from bot.handlers import MessageHandler
+from config.settings import get_settings
+from services.decision_engine import DecisionEngine
+from services.memory import Memory
+from services.owner_learning import OwnerLearningSystem
+from services.persona_manager import PersonaManager
+from services.style import StyleEngine
+from services.typing_simulator import TypingSimulator
+from services.user_profiler import UserProfiler
+from utils.language_detector import LanguageDetector
 from utils.rich_logger import setup_rich_logging
 
 
@@ -34,7 +34,7 @@ async def initialize_components():
     settings = get_settings()
     logger = setup_rich_logging(
         level=settings.daemon.log_level,
-        log_file=settings.paths.logs
+        log_file=settings.paths.logs,
     )
 
     logger.info("🚀 Initializing AlphaSnobAI with full persona system...")
@@ -57,7 +57,7 @@ async def initialize_components():
         api_key=api_key,
         model=settings.llm.model,
         temperature=settings.llm.temperature,
-        max_tokens=settings.llm.max_tokens
+        max_tokens=settings.llm.max_tokens,
     )
     logger.success(f"✓ Style engine initialized ({settings.llm.provider})")
 
@@ -72,18 +72,23 @@ async def initialize_components():
         try:
             owner_learning = OwnerLearningSystem(
                 manual_samples_path=settings.owner_learning.manual_samples_path,
-                min_samples=settings.owner_learning.min_samples
+                min_samples=settings.owner_learning.min_samples,
             )
             if owner_learning.has_sufficient_samples():
-                logger.success(f"✓ Owner learning initialized ({len(owner_learning.samples)} samples)")
+                logger.success(
+                    f"✓ Owner learning initialized ({len(owner_learning.samples)} samples)",
+                )
             else:
-                logger.warning(f"⚠ Owner learning initialized with insufficient samples ({len(owner_learning.samples)}/{settings.owner_learning.min_samples})")
+                logger.warning(
+                    f"⚠ Owner learning initialized with insufficient samples ({len(owner_learning.samples)}/{settings.owner_learning.min_samples})",
+                )
 
             # Initialize owner collector for auto-collection
             from services.owner_collector import OwnerMessageCollector
+
             owner_collector = OwnerMessageCollector(settings.owner_learning)
             if settings.owner_learning.auto_collect:
-                logger.success(f"✓ Owner collector initialized (auto_collect enabled)")
+                logger.success("✓ Owner collector initialized (auto_collect enabled)")
             else:
                 logger.info("○ Owner collector initialized (auto_collect disabled)")
 
@@ -95,7 +100,7 @@ async def initialize_components():
     # 5. Language Detector
     language_detector = LanguageDetector(
         supported_languages=settings.language.supported,
-        default_language=settings.language.default
+        default_language=settings.language.default,
     )
     logger.success(f"✓ Language detector initialized ({', '.join(settings.language.supported)})")
 
@@ -123,7 +128,7 @@ async def initialize_components():
         decision_engine=decision_engine,
         language_detector=language_detector,
         owner_learning=owner_learning,
-        owner_collector=owner_collector
+        owner_collector=owner_collector,
     )
     logger.success("✓ Message handler initialized with full persona system")
 

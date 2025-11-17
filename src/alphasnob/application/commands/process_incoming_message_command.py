@@ -1,7 +1,6 @@
 """Process incoming message command and handler."""
 
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from returns.result import Failure, Result, Success
@@ -14,8 +13,6 @@ from alphasnob.domain.messaging.value_objects.chat_id import ChatId
 from alphasnob.domain.messaging.value_objects.message_content import MessageContent
 from alphasnob.domain.shared.errors import DomainError
 from alphasnob.domain.users.repositories.user_repository import UserProfileRepository
-from alphasnob.domain.users.value_objects.relationship import Relationship, RelationshipLevel
-from alphasnob.domain.users.value_objects.trust_score import TrustScore
 from alphasnob.domain.users.value_objects.user_id import UserId
 
 
@@ -45,7 +42,7 @@ class ProcessIncomingMessageCommand(Command):
     is_private_chat: bool = False
 
 
-class ProcessIncomingMessageCommandHandler(CommandHandler[UUID]):
+class ProcessIncomingMessageCommandHandler(CommandHandler["ProcessIncomingMessageCommand", UUID]):
     """Handler for ProcessIncomingMessageCommand.
 
     This is the main application service that orchestrates:
@@ -61,7 +58,7 @@ class ProcessIncomingMessageCommandHandler(CommandHandler[UUID]):
         message_repository: MessageRepository,
         user_profile_repository: UserProfileRepository,
         decision_engine: DecisionEngine,
-        bot_username: Optional[str] = None,
+        bot_username: str | None = None,
     ):
         """Initialize handler with dependencies.
 
@@ -77,7 +74,8 @@ class ProcessIncomingMessageCommandHandler(CommandHandler[UUID]):
         self.bot_username = bot_username
 
     async def handle(
-        self, command: ProcessIncomingMessageCommand
+        self,
+        command: ProcessIncomingMessageCommand,
     ) -> Result[UUID, Exception]:
         """Handle process incoming message command.
 
@@ -95,7 +93,7 @@ class ProcessIncomingMessageCommandHandler(CommandHandler[UUID]):
                 user_id=UserId(command.user_id),
                 content=MessageContent(command.text),
                 username=command.username,
-                timestamp=datetime.now(),
+                timestamp=datetime.now(UTC),
                 is_from_bot=False,
             )
             await self.message_repository.save(message)
@@ -127,5 +125,5 @@ class ProcessIncomingMessageCommandHandler(CommandHandler[UUID]):
 
         except DomainError as e:
             return Failure(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return Failure(e)

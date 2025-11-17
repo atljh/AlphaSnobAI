@@ -9,6 +9,8 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel
 from returns.result import Result
 
+# Query type
+TQuery = TypeVar("TQuery", bound="Query")
 # Query result type
 TResult = TypeVar("TResult")
 
@@ -29,7 +31,7 @@ class Query(BaseModel):
         frozen = True  # Queries are immutable
 
 
-class QueryHandler(ABC, Generic[TResult]):
+class QueryHandler(ABC, Generic[TQuery, TResult]):
     """Base class for query handlers.
 
     Each query has exactly one handler that executes the query.
@@ -37,7 +39,7 @@ class QueryHandler(ABC, Generic[TResult]):
     Handlers return Result monads for consistent error handling.
 
     Examples:
-        class GetMessageHistoryQueryHandler(QueryHandler[list[MessageDTO]]):
+        class GetMessageHistoryQueryHandler(QueryHandler[GetMessageHistoryQuery, list[MessageDTO]]):
             async def handle(self, query: GetMessageHistoryQuery) -> Result[list[MessageDTO], Error]:
                 # Execute query logic
                 ...
@@ -45,7 +47,7 @@ class QueryHandler(ABC, Generic[TResult]):
     """
 
     @abstractmethod
-    async def handle(self, query: Query) -> Result[TResult, Exception]:
+    async def handle(self, query: TQuery) -> Result[TResult, Exception]:
         """Handle the query.
 
         Args:

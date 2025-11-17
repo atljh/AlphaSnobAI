@@ -46,12 +46,13 @@ class TrustScore(ValueObject):
             ValidationError: If value is out of range
         """
         if not 0.0 <= value <= 1.0:
+            msg = "Trust score must be between 0.0 and 1.0"
             raise ValidationError(
-                "Trust score must be between 0.0 and 1.0",
+                msg,
                 value=value,
             )
 
-        super().__init__(value=value)
+        super().__init__(value=value)  # type: ignore[call-arg]
 
     def is_trusted(self) -> bool:
         """Check if user is considered trusted.
@@ -59,7 +60,7 @@ class TrustScore(ValueObject):
         Returns:
             True if trust score >= 0.7, False otherwise
         """
-        return self.value >= 0.7
+        return self.value >= 0.7  # noqa: PLR2004
 
     def is_suspicious(self) -> bool:
         """Check if user is considered suspicious.
@@ -67,7 +68,7 @@ class TrustScore(ValueObject):
         Returns:
             True if trust score < 0.3, False otherwise
         """
-        return self.value < 0.3
+        return self.value < 0.3  # noqa: PLR2004
 
     def adjust(self, delta: float) -> "TrustScore":
         """Create new trust score with adjustment.

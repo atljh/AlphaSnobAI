@@ -32,19 +32,21 @@ class Prompt(ValueObject):
             ValidationError: If prompt is empty or too long
         """
         if not text.strip():
-            raise ValidationError("Prompt cannot be empty")
+            msg = "Prompt cannot be empty"
+            raise ValidationError(msg)
 
         # Rough limit to prevent context window issues
         # (actual token limit depends on model, this is characters)
-        if len(text) > 50000:
+        if len(text) > 50000:  # noqa: PLR2004
+            msg = "Prompt exceeds maximum length"
             raise ValidationError(
-                "Prompt exceeds maximum length",
+                msg,
                 length=len(text),
             )
 
-        super().__init__(text=text)
+        super().__init__(text=text)  # type: ignore[call-arg]
 
-    def format(self, **kwargs: str | int | float) -> "Prompt":
+    def format(self, **kwargs: str | float) -> "Prompt":
         """Format prompt with variables.
 
         Args:

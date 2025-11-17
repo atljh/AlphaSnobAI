@@ -1,15 +1,15 @@
 import logging
+
+from config.settings import get_settings
 from telethon import TelegramClient, events
 from telethon.tl.types import User
 
-from config.settings import get_settings
 from bot.handlers import MessageHandler
 
 logger = logging.getLogger(__name__)
 
 
 class AlphaSnobClient:
-
     def __init__(self, message_handler: MessageHandler):
         self.message_handler = message_handler
         settings = get_settings()
@@ -17,7 +17,7 @@ class AlphaSnobClient:
         self.client = TelegramClient(
             str(settings.base_dir / settings.telegram.session_name),
             settings.telegram.api_id,
-            settings.telegram.api_hash
+            settings.telegram.api_hash,
         )
 
         self._register_handlers()
@@ -25,7 +25,6 @@ class AlphaSnobClient:
         logger.info("AlphaSnobClient initialized")
 
     def _register_handlers(self):
-        # Handle incoming messages
         @self.client.on(events.NewMessage(incoming=True))
         async def on_new_message(event):
             await self.message_handler.handle_message(event)
@@ -42,7 +41,7 @@ class AlphaSnobClient:
         if isinstance(me, User):
             self.message_handler.set_my_user_info(
                 user_id=me.id,
-                username=me.username
+                username=me.username,
             )
             logger.info(f"Bot started as @{me.username} (ID: {me.id})")
             logger.info(f"Response mode: {settings.bot.response_mode}")

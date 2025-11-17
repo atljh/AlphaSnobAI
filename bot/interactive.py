@@ -1,15 +1,12 @@
-import asyncio
-import time
-from datetime import datetime, timedelta
 from collections import deque
-from threading import Thread
-from rich.live import Live
+from datetime import datetime
+
+from rich import box
+from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from rich.console import Console
-from rich import box
 
 console = Console()
 
@@ -19,22 +16,22 @@ class InteractiveSession:
         self.layout = Layout()
         self.logs = deque(maxlen=50)
         self.stats = {
-            'messages_processed': 0,
-            'responses_sent': 0,
-            'start_time': datetime.now(),
-            'last_activity': None
+            "messages_processed": 0,
+            "responses_sent": 0,
+            "start_time": datetime.now(),
+            "last_activity": None,
         }
         self.running = True
 
         self.layout.split(
             Layout(name="header", size=3),
             Layout(name="main", ratio=1),
-            Layout(name="footer", size=3)
+            Layout(name="footer", size=3),
         )
 
         self.layout["main"].split_row(
             Layout(name="stats", ratio=1),
-            Layout(name="logs", ratio=2)
+            Layout(name="logs", ratio=2),
         )
 
     def add_log(self, level: str, message: str):
@@ -44,17 +41,17 @@ class InteractiveSession:
             "SUCCESS": "✅",
             "WARNING": "⚠️",
             "ERROR": "❌",
-            "DEBUG": "🔍"
+            "DEBUG": "🔍",
         }
         icon = icons.get(level, "•")
         self.logs.append(f"[dim]{timestamp}[/dim] {icon} {message}")
 
     def increment_messages(self):
-        self.stats['messages_processed'] += 1
-        self.stats['last_activity'] = datetime.now()
+        self.stats["messages_processed"] += 1
+        self.stats["last_activity"] = datetime.now()
 
     def increment_responses(self):
-        self.stats['responses_sent'] += 1
+        self.stats["responses_sent"] += 1
 
     def make_header(self) -> Panel:
         header = Text()
@@ -68,13 +65,13 @@ class InteractiveSession:
         return Panel(header, border_style="cyan")
 
     def make_stats(self) -> Panel:
-        uptime = datetime.now() - self.stats['start_time']
+        uptime = datetime.now() - self.stats["start_time"]
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
 
         rate = (
-            self.stats['responses_sent'] / self.stats['messages_processed'] * 100
-            if self.stats['messages_processed'] > 0
+            self.stats["responses_sent"] / self.stats["messages_processed"] * 100
+            if self.stats["messages_processed"] > 0
             else 0
         )
 
@@ -84,12 +81,12 @@ class InteractiveSession:
 
         table.add_row("Status:", "🟢 Running")
         table.add_row("Uptime:", f"{hours}h {minutes}m {seconds}s")
-        table.add_row("Messages:", str(self.stats['messages_processed']))
-        table.add_row("Responses:", str(self.stats['responses_sent']))
+        table.add_row("Messages:", str(self.stats["messages_processed"]))
+        table.add_row("Responses:", str(self.stats["responses_sent"]))
         table.add_row("Rate:", f"{rate:.1f}%")
 
-        if self.stats['last_activity']:
-            elapsed = (datetime.now() - self.stats['last_activity']).seconds
+        if self.stats["last_activity"]:
+            elapsed = (datetime.now() - self.stats["last_activity"]).seconds
             table.add_row("Last activity:", f"{elapsed}s ago")
 
         return Panel(table, title="📊 Statistics", border_style="green", box=box.ROUNDED)
@@ -104,7 +101,7 @@ class InteractiveSession:
             log_text,
             title="📝 Live Logs",
             border_style="blue",
-            box=box.ROUNDED
+            box=box.ROUNDED,
         )
 
     def make_footer(self) -> Panel:

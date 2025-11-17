@@ -1,7 +1,6 @@
 """Style sample entity."""
 
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 
 from alphasnob.domain.shared.base_entity import Entity
 
@@ -30,13 +29,13 @@ class StyleSample(Entity):
 
     text: str
     source: str = "manual"
-    language: Optional[str] = None
+    language: str | None = None
     character_count: int
     word_count: int
     collected_at: datetime
     is_verified: bool = True
 
-    def __init__(self, text: str, **kwargs):  # type: ignore
+    def __init__(self, text: str, **kwargs: object) -> None:
         """Initialize style sample with text analysis.
 
         Args:
@@ -46,14 +45,14 @@ class StyleSample(Entity):
         # Calculate counts
         character_count = len(text)
         word_count = len(text.split())
-        collected_at = kwargs.pop("collected_at", datetime.now())
+        collected_at = kwargs.pop("collected_at", datetime.now(UTC))
 
-        super().__init__(
+        super().__init__(  # type: ignore[call-arg]
             text=text,
             character_count=character_count,
             word_count=word_count,
             collected_at=collected_at,
-            **kwargs,
+            **kwargs,  # type: ignore[arg-type]
         )
 
     def mark_verified(self) -> None:

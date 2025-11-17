@@ -4,23 +4,18 @@ Manages the bot subprocess using QProcess with real-time output streaming.
 """
 
 import sys
-import psutil
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
-from PySide6.QtCore import QObject, QProcess, Signal, QTimer
+import psutil
+from PySide6.QtCore import QObject, QProcess, QTimer, Signal
 
-# Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from bot.daemon import DaemonManager
 
 
 class BotProcessManager(QObject):
-    """Manages bot process lifecycle and monitoring."""
-
-    # Signals
     log_received = Signal(str)  # Emitted when new log line received
     status_changed = Signal(str)  # Emitted when bot status changes
     error_occurred = Signal(str)  # Emitted on error
@@ -28,29 +23,24 @@ class BotProcessManager(QObject):
     def __init__(self):
         super().__init__()
 
-        # Get settings for paths
         from config.settings import get_settings
+
         settings = get_settings()
 
-        # QProcess for subprocess management
         self.process = None
         self.daemon_manager = DaemonManager(settings.daemon.pid_file)
 
-        # State
         self._status = "stopped"
         self._pid = None
         self._start_time = None
 
-        # Monitor timer
         self.monitor_timer = QTimer()
         self.monitor_timer.timeout.connect(self._monitor_status)
         self.monitor_timer.start(2000)  # Check every 2 seconds
 
-        # Initial status check
         self._check_existing_process()
 
     def _check_existing_process(self):
-        """Check if bot is already running."""
         if self.daemon_manager.is_running():
             self._pid = self.daemon_manager.get_pid()
             self._status = "running"
@@ -61,11 +51,6 @@ class BotProcessManager(QObject):
             self.status_changed.emit("stopped")
 
     def start_bot(self) -> bool:
-        """Start the bot process.
-
-        Returns:
-            True if started successfully, False otherwise
-        """
         try:
             if self._status == "running":
                 self.error_occurred.emit("Bot is already running")
@@ -75,31 +60,28 @@ class BotProcessManager(QObject):
             self._status = "starting"
             self.status_changed.emit("starting")
 
-            # Create QProcess
             self.process = QProcess()
             self.process.readyReadStandardOutput.connect(self._handle_stdout)
             self.process.readyReadStandardError.connect(self._handle_stderr)
             self.process.stateChanged.connect(self._handle_state_change)
             self.process.finished.connect(self._handle_finished)
 
-            # Start main.py
             python_exe = sys.executable
             main_py = str(Path(__file__).parent.parent.parent / "main.py")
 
             self.process.start(python_exe, [main_py])
 
-            if self.process.waitForStarted(5000):  # Wait 5 seconds
+            if self.process.waitForStarted(5000):
                 self._pid = self.process.processId()
                 self._start_time = datetime.now()
                 self._status = "running"
                 self.status_changed.emit("running")
                 self.log_received.emit(f"[SUCCESS] Bot started (PID: {self._pid})")
                 return True
-            else:
-                self._status = "stopped"
-                self.status_changed.emit("stopped")
-                self.error_occurred.emit("Failed to start bot process")
-                return False
+            self._status = "stopped"
+            self.status_changed.emit("stopped")
+            self.error_occurred.emit("Failed to start bot process")
+            return False
 
         except Exception as e:
             self._status = "stopped"
@@ -147,11 +129,6 @@ class BotProcessManager(QObject):
             return False
 
     def restart_bot(self) -> bool:
-        """Restart the bot process.
-
-        Returns:
-            True if restarted successfully, False otherwise
-        """
         self.log_received.emit("[INFO] Restarting bot...")
 
         if self._status != "stopped":
@@ -173,7 +150,7 @@ class BotProcessManager(QObject):
             "pid": self._pid,
             "uptime": None,
             "cpu_percent": 0.0,
-            "memory_mb": 0.0
+            "memory_mb": 0.0,
         }
 
         if self._status == "running" and self._pid:
@@ -209,16 +186,16 @@ class BotProcessManager(QObject):
     def _handle_stdout(self):
         """Handle stdout from bot process."""
         if self.process:
-            data = self.process.readAllStandardOutput().data().decode('utf-8', errors='replace')
-            for line in data.strip().split('\n'):
+            data = self.process.readAllStandardOutput().data().decode("utf-8", errors="replace")
+            for line in data.strip().split("\n"):
                 if line:
                     self.log_received.emit(line)
 
     def _handle_stderr(self):
         """Handle stderr from bot process."""
         if self.process:
-            data = self.process.readAllStandardError().data().decode('utf-8', errors='replace')
-            for line in data.strip().split('\n'):
+            data = self.process.readAllStandardError().data().decode("utf-8", errors="replace")
+            for line in data.strip().split("\n"):
                 if line:
                     self.log_received.emit(f"[ERROR] {line}")
 

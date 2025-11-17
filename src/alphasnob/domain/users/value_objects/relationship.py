@@ -3,6 +3,7 @@
 from enum import Enum
 
 from alphasnob.domain.shared.base_value_object import ValueObject
+from alphasnob.domain.shared.errors import ValidationError
 
 
 class RelationshipLevel(str, Enum):
@@ -107,7 +108,7 @@ class Relationship(ValueObject):
         if self.level == RelationshipLevel.OWNER:
             return False  # Cannot change owner status
 
-        if self.level == RelationshipLevel.BLOCKED or new_level == RelationshipLevel.BLOCKED:
+        if RelationshipLevel.BLOCKED in (self.level, new_level):
             return False  # Blocked status requires manual intervention
 
         if new_level == RelationshipLevel.OWNER:
@@ -126,7 +127,45 @@ class Relationship(ValueObject):
         new_priority = new_level.priority
 
         # Allow upgrade by one level
-        return 0 < (new_priority - current_priority) <= 20
+        return 0 < (new_priority - current_priority) <= 20  # noqa: PLR2004
+
+    def upgrade_to(self, new_level: RelationshipLevel) -> "Relationship":
+        """Upgrade relationship to new level.
+
+        Args:
+            new_level: Target relationship level
+
+        Returns:
+            New Relationship with upgraded level
+
+        Raises:
+            ValidationError: If upgrade is not allowed
+        """
+        if not self.can_upgrade_to(new_level):
+            msg = f"Cannot upgrade relationship from {self.level} to {new_level}"
+            raise ValidationError(
+                msg,
+                current_level=self.level,
+                target_level=new_level,
+            )
+
+        return Relationship(level=new_level)
+
+    def is_blocked(self) -> bool:
+        """Check if relationship is blocked.
+
+        Returns:
+            True if blocked, False otherwise
+        """
+        return self.level == RelationshipLevel.BLOCKED
+
+    def is_owner(self) -> bool:
+        """Check if relationship is owner.
+
+        Returns:
+            True if owner, False otherwise
+        """
+        return self.level == RelationshipLevel.OWNER
 
     def __str__(self) -> str:
         """Return string representation."""

@@ -1,7 +1,6 @@
 """Message DTOs."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -20,10 +19,10 @@ class MessageDTO(BaseModel):
     chat_id: int
     user_id: int
     text: str
-    username: Optional[str] = None
+    username: str | None = None
     timestamp: datetime
     is_from_bot: bool = False
-    persona_mode: Optional[str] = None
+    persona_mode: str | None = None
 
 
 class ChatDTO(BaseModel):
@@ -33,7 +32,7 @@ class ChatDTO(BaseModel):
 
     id: str  # UUID as string
     chat_id: int
-    title: Optional[str] = None
+    title: str | None = None
     chat_type: str
-    username: Optional[str] = None
+    username: str | None = None
     is_active: bool = True

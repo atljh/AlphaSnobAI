@@ -3,24 +3,29 @@
 Provides the main interface with sidebar navigation and content area.
 """
 
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QListWidget, QStackedWidget, QLabel, QStatusBar,
-    QMenuBar, QMenu
-)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QMainWindow,
+    QStackedWidget,
+    QStatusBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Import backend
 from gui.backend.bot_process import BotProcessManager
 
 # Import widgets
 from gui.widgets.bot_control import BotControlWidget
-from gui.widgets.log_viewer import LogViewerWidget
-from gui.widgets.settings_editor import SettingsEditorWidget
 from gui.widgets.database_viewer import DatabaseViewerWidget
-from gui.widgets.statistics import StatisticsWidget
+from gui.widgets.log_viewer import LogViewerWidget
 from gui.widgets.owner_learning import OwnerLearningWidget
+from gui.widgets.settings_editor import SettingsEditorWidget
+from gui.widgets.statistics import StatisticsWidget
 
 
 class PlaceholderWidget(QWidget):
@@ -42,26 +47,30 @@ class PlaceholderWidget(QWidget):
 
         # Title
         title = QLabel(name)
-        title.setStyleSheet("""
+        title.setStyleSheet(
+            """
             QLabel {
                 font-size: 28px;
                 font-weight: 700;
                 color: #f1f5f9;
             }
-        """)
+        """,
+        )
         title.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(title)
 
         # Description
         desc = QLabel("This feature is under development and will be available soon.")
         desc.setWordWrap(True)
-        desc.setStyleSheet("""
+        desc.setStyleSheet(
+            """
             QLabel {
                 font-size: 15px;
                 color: #cbd5e1;
                 line-height: 1.6;
             }
-        """)
+        """,
+        )
         desc.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(desc)
 
@@ -191,25 +200,31 @@ class MainWindow(QMainWindow):
         welcome_layout.setContentsMargins(24, 24, 24, 24)
 
         welcome_title = QLabel("Welcome to AlphaSnobAI")
-        welcome_title.setStyleSheet("""
+        welcome_title.setStyleSheet(
+            """
             QLabel {
                 font-size: 24px;
                 font-weight: 700;
                 color: #f1f5f9;
                 margin-bottom: 8px;
             }
-        """)
+        """,
+        )
         welcome_layout.addWidget(welcome_title)
 
-        welcome_desc = QLabel("Modern desktop application for managing your Telegram bot with style.")
+        welcome_desc = QLabel(
+            "Modern desktop application for managing your Telegram bot with style.",
+        )
         welcome_desc.setWordWrap(True)
-        welcome_desc.setStyleSheet("""
+        welcome_desc.setStyleSheet(
+            """
             QLabel {
                 font-size: 14px;
                 color: #cbd5e1;
                 line-height: 1.6;
             }
-        """)
+        """,
+        )
         welcome_layout.addWidget(welcome_desc)
 
         info_layout.addWidget(welcome_card)
@@ -222,14 +237,16 @@ class MainWindow(QMainWindow):
         stats_layout.setSpacing(16)
 
         stats_title = QLabel("Quick Stats")
-        stats_title.setStyleSheet("""
+        stats_title.setStyleSheet(
+            """
             QLabel {
                 font-size: 18px;
                 font-weight: 600;
                 color: #f1f5f9;
                 margin-bottom: 8px;
             }
-        """)
+        """,
+        )
         stats_layout.addWidget(stats_title)
 
         # Stats items with gradient accents
@@ -245,22 +262,26 @@ class MainWindow(QMainWindow):
             stat_layout.setContentsMargins(0, 8, 0, 8)
 
             stat_label = QLabel(f"• {label}:")
-            stat_label.setStyleSheet(f"""
-                QLabel {{
+            stat_label.setStyleSheet(
+                """
+                QLabel {
                     font-size: 14px;
                     color: #cbd5e1;
-                }}
-            """)
+                }
+            """,
+            )
             stat_layout.addWidget(stat_label)
 
             stat_value = QLabel(value)
-            stat_value.setStyleSheet(f"""
+            stat_value.setStyleSheet(
+                f"""
                 QLabel {{
                     font-size: 14px;
                     font-weight: 600;
                     color: {color};
                 }}
-            """)
+            """,
+            )
             stat_layout.addWidget(stat_value)
             stat_layout.addStretch()
 
@@ -381,6 +402,7 @@ class MainWindow(QMainWindow):
         """Apply theme by name."""
         if self.theme_manager:
             from gui.themes import Theme
+
             theme_map = {
                 "glass_dark": Theme.GLASS_DARK,
                 "glass_light": Theme.GLASS_LIGHT,

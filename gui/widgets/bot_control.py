@@ -3,12 +3,17 @@
 Provides controls and status display for the bot process.
 """
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QGroupBox, QMessageBox
-)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from gui.backend.bot_process import BotProcessManager
 
@@ -99,7 +104,8 @@ class BotControlWidget(QWidget):
         self.start_button = QPushButton("Start Bot")
         self.start_button.setMinimumHeight(48)
         self.start_button.setCursor(Qt.PointingHandCursor)
-        self.start_button.setStyleSheet("""
+        self.start_button.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -131,7 +137,8 @@ class BotControlWidget(QWidget):
                 background: rgba(71, 85, 105, 0.5);
                 color: #64748b;
             }
-        """)
+        """,
+        )
         self.start_button.clicked.connect(self._on_start_clicked)
         control_layout.addWidget(self.start_button)
 
@@ -139,7 +146,8 @@ class BotControlWidget(QWidget):
         self.stop_button = QPushButton("Stop Bot")
         self.stop_button.setMinimumHeight(48)
         self.stop_button.setCursor(Qt.PointingHandCursor)
-        self.stop_button.setStyleSheet("""
+        self.stop_button.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -171,7 +179,8 @@ class BotControlWidget(QWidget):
                 background: rgba(71, 85, 105, 0.5);
                 color: #64748b;
             }
-        """)
+        """,
+        )
         self.stop_button.clicked.connect(self._on_stop_clicked)
         control_layout.addWidget(self.stop_button)
 
@@ -179,7 +188,8 @@ class BotControlWidget(QWidget):
         self.restart_button = QPushButton("Restart Bot")
         self.restart_button.setMinimumHeight(48)
         self.restart_button.setCursor(Qt.PointingHandCursor)
-        self.restart_button.setStyleSheet("""
+        self.restart_button.setStyleSheet(
+            """
             QPushButton {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -211,7 +221,8 @@ class BotControlWidget(QWidget):
                 background: rgba(71, 85, 105, 0.5);
                 color: #64748b;
             }
-        """)
+        """,
+        )
         self.restart_button.clicked.connect(self._on_restart_clicked)
         control_layout.addWidget(self.restart_button)
 
@@ -219,7 +230,8 @@ class BotControlWidget(QWidget):
 
         # Restart required indicator with glass styling
         self.restart_required_label = QLabel("Restart required to apply settings")
-        self.restart_required_label.setStyleSheet("""
+        self.restart_required_label.setStyleSheet(
+            """
             QLabel {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
@@ -233,7 +245,8 @@ class BotControlWidget(QWidget):
                 font-size: 14px;
                 border: 1px solid rgba(251, 146, 60, 0.3);
             }
-        """)
+        """,
+        )
         self.restart_required_label.setAlignment(Qt.AlignCenter)
         self.restart_required_label.hide()
         layout.addWidget(self.restart_required_label)
@@ -259,7 +272,7 @@ class BotControlWidget(QWidget):
             "Are you sure you want to restart the bot?\n\n"
             "This will temporarily disconnect from Telegram.",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
@@ -277,7 +290,7 @@ class BotControlWidget(QWidget):
         QMessageBox.critical(
             self,
             "Bot Error",
-            error
+            error,
         )
         self._update_status()
 
